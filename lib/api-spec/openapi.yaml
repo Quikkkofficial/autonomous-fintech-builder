@@ -1,22 +1,29 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CreditBridge - Loan & Credit Marketplace API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: profile
+  - name: kyc
+  - name: credit
+  - name: lenders
+  - name: loans
+  - name: cards
+  - name: notifications
+  - name: dashboard
+  - name: tools
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +31,702 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/otp/send:
+    post:
+      operationId: sendOtp
+      tags: [auth]
+      summary: Send OTP to phone (returns dev OTP for demo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpSendRequest"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpSendResponse"
+  /auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Verify OTP and create session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyRequest"
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+  /me:
+    get:
+      operationId: getMe
+      tags: [profile]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /kyc:
+    get:
+      operationId: getKyc
+      tags: [kyc]
+      summary: Get my KYC
+      responses:
+        "200":
+          description: KYC
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Kyc"
+    post:
+      operationId: submitKyc
+      tags: [kyc]
+      summary: Submit KYC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KycInput"
+      responses:
+        "200":
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Kyc"
+  /credit-score:
+    get:
+      operationId: getCreditScore
+      tags: [credit]
+      summary: Get current credit score
+      responses:
+        "200":
+          description: Credit score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditScore"
+  /lenders:
+    get:
+      operationId: listLenders
+      tags: [lenders]
+      summary: List partner lenders
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [personal, home, auto, business, education]
+      responses:
+        "200":
+          description: Lenders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lender"
+  /loans/match:
+    post:
+      operationId: matchLoans
+      tags: [loans]
+      summary: AI match loan offers from partner lenders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchInput"
+      responses:
+        "200":
+          description: Matched offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoanOffer"
+  /loan-applications:
+    get:
+      operationId: listLoanApplications
+      tags: [loans]
+      summary: List my loan applications
+      responses:
+        "200":
+          description: Applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoanApplication"
+    post:
+      operationId: createLoanApplication
+      tags: [loans]
+      summary: Create a loan application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanApplicationInput"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanApplication"
+  /loan-applications/{id}:
+    get:
+      operationId: getLoanApplication
+      tags: [loans]
+      summary: Get a loan application
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanApplication"
+  /credit-cards:
+    get:
+      operationId: listCreditCards
+      tags: [cards]
+      summary: List credit card offers
+      responses:
+        "200":
+          description: Card offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreditCardOffer"
+  /credit-card-applications:
+    get:
+      operationId: listCardApplications
+      tags: [cards]
+      summary: List my credit card applications
+      responses:
+        "200":
+          description: Card apps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CardApplication"
+    post:
+      operationId: createCardApplication
+      tags: [cards]
+      summary: Apply for a credit card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardApplyRequest"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardApplication"
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard summary
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /tools/emi:
+    post:
+      operationId: calculateEmi
+      tags: [tools]
+      summary: Calculate EMI and amortization schedule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmiCalcRequest"
+      responses:
+        "200":
+          description: EMI result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmiResult"
 components:
   schemas:
+    Ok:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+    OtpSendRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+    OtpSendResponse:
+      type: object
+      required: [sent, devOtp]
+      properties:
+        sent:
+          type: boolean
+        devOtp:
+          type: string
+    OtpVerifyRequest:
+      type: object
+      required: [phone, otp]
+      properties:
+        phone:
+          type: string
+        otp:
+          type: string
+    CardApplyRequest:
+      type: object
+      required: [cardId]
+      properties:
+        cardId:
+          type: string
+    EmiCalcRequest:
+      type: object
+      required: [principal, annualRate, tenureMonths]
+      properties:
+        principal:
+          type: number
+        annualRate:
+          type: number
+        tenureMonths:
+          type: integer
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
-
+    User:
+      type: object
+      required: [id, phone, kycStatus]
+      properties:
+        id:
+          type: string
+        phone:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        kycStatus:
+          type: string
+          enum: [pending, submitted, verified, rejected]
+        panMasked:
+          type: string
+        createdAt:
+          type: string
+    KycInput:
+      type: object
+      required: [pan, aadhaar, dob, fullName, address, bankAccount, ifsc, monthlyIncome, employmentType]
+      properties:
+        pan:
+          type: string
+        aadhaar:
+          type: string
+        dob:
+          type: string
+        fullName:
+          type: string
+        address:
+          type: string
+        bankAccount:
+          type: string
+        ifsc:
+          type: string
+        monthlyIncome:
+          type: number
+        employmentType:
+          type: string
+          enum: [salaried, self_employed, business_owner, freelancer]
+        consent:
+          type: boolean
+    Kyc:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, submitted, verified, rejected]
+        fullName:
+          type: string
+        panMasked:
+          type: string
+        aadhaarMasked:
+          type: string
+        dob:
+          type: string
+        address:
+          type: string
+        bankAccountMasked:
+          type: string
+        ifsc:
+          type: string
+        monthlyIncome:
+          type: number
+        employmentType:
+          type: string
+        verifiedAt:
+          type: string
+    CreditScore:
+      type: object
+      required: [score, bureau, asOf, band, factors]
+      properties:
+        score:
+          type: integer
+        bureau:
+          type: string
+        asOf:
+          type: string
+        band:
+          type: string
+          enum: [excellent, good, fair, poor]
+        factors:
+          type: array
+          items:
+            type: object
+            required: [label, impact]
+            properties:
+              label:
+                type: string
+              impact:
+                type: string
+                enum: [positive, neutral, negative]
+              detail:
+                type: string
+    Lender:
+      type: object
+      required: [id, name, type, minRate, maxRate, minAmount, maxAmount, minTenureMonths, maxTenureMonths, processingFeePct, minIncome, minCreditScore, approvalHours, rating, supportedTypes]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [bank, nbfc]
+        tagline:
+          type: string
+        minRate:
+          type: number
+        maxRate:
+          type: number
+        minAmount:
+          type: number
+        maxAmount:
+          type: number
+        minTenureMonths:
+          type: integer
+        maxTenureMonths:
+          type: integer
+        processingFeePct:
+          type: number
+        minIncome:
+          type: number
+        minCreditScore:
+          type: integer
+        approvalHours:
+          type: integer
+        rating:
+          type: number
+        supportedTypes:
+          type: array
+          items:
+            type: string
+    MatchInput:
+      type: object
+      required: [type, amount, tenureMonths]
+      properties:
+        type:
+          type: string
+          enum: [personal, home, auto, business, education]
+        amount:
+          type: number
+        tenureMonths:
+          type: integer
+    LoanOffer:
+      type: object
+      required: [lenderId, lenderName, lenderType, amount, tenureMonths, interestRate, emi, processingFee, totalPayable, matchScore, preApproved]
+      properties:
+        lenderId:
+          type: string
+        lenderName:
+          type: string
+        lenderType:
+          type: string
+        amount:
+          type: number
+        tenureMonths:
+          type: integer
+        interestRate:
+          type: number
+        emi:
+          type: number
+        processingFee:
+          type: number
+        totalPayable:
+          type: number
+        matchScore:
+          type: integer
+        preApproved:
+          type: boolean
+        approvalHours:
+          type: integer
+        rating:
+          type: number
+    LoanApplicationInput:
+      type: object
+      required: [lenderId, type, amount, tenureMonths]
+      properties:
+        lenderId:
+          type: string
+        type:
+          type: string
+          enum: [personal, home, auto, business, education]
+        amount:
+          type: number
+        tenureMonths:
+          type: integer
+        purpose:
+          type: string
+    LoanApplication:
+      type: object
+      required: [id, lenderId, lenderName, type, amount, tenureMonths, interestRate, emi, status, createdAt, statusHistory]
+      properties:
+        id:
+          type: string
+        lenderId:
+          type: string
+        lenderName:
+          type: string
+        type:
+          type: string
+        amount:
+          type: number
+        tenureMonths:
+          type: integer
+        interestRate:
+          type: number
+        emi:
+          type: number
+        purpose:
+          type: string
+        status:
+          type: string
+          enum: [submitted, under_review, approved, disbursed, rejected]
+        createdAt:
+          type: string
+        expectedDisbursalAt:
+          type: string
+        referenceCode:
+          type: string
+        statusHistory:
+          type: array
+          items:
+            type: object
+            required: [status, at, note]
+            properties:
+              status:
+                type: string
+              at:
+                type: string
+              note:
+                type: string
+    CreditCardOffer:
+      type: object
+      required: [id, name, issuer, network, annualFee, joiningFee, rewardsRate, minIncome, minCreditScore, perks, color]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        issuer:
+          type: string
+        network:
+          type: string
+          enum: [visa, mastercard, rupay, amex]
+        category:
+          type: string
+        annualFee:
+          type: number
+        joiningFee:
+          type: number
+        rewardsRate:
+          type: string
+        minIncome:
+          type: number
+        minCreditScore:
+          type: integer
+        perks:
+          type: array
+          items:
+            type: string
+        color:
+          type: string
+    CardApplication:
+      type: object
+      required: [id, cardId, cardName, status, createdAt]
+      properties:
+        id:
+          type: string
+        cardId:
+          type: string
+        cardName:
+          type: string
+        status:
+          type: string
+          enum: [submitted, under_review, approved, dispatched, rejected]
+        createdAt:
+          type: string
+        referenceCode:
+          type: string
+    Notification:
+      type: object
+      required: [id, channel, title, message, createdAt, read]
+      properties:
+        id:
+          type: string
+        channel:
+          type: string
+          enum: [sms, email, whatsapp, app]
+        title:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+        read:
+          type: boolean
+    DashboardSummary:
+      type: object
+      required: [activeApplications, approvedAmount, disbursedAmount, creditScore, totalLenders, recentActivity, applicationsByStatus]
+      properties:
+        activeApplications:
+          type: integer
+        approvedAmount:
+          type: number
+        disbursedAmount:
+          type: number
+        creditScore:
+          type: integer
+        creditScoreBand:
+          type: string
+        totalLenders:
+          type: integer
+        nextEmiAmount:
+          type: number
+        nextEmiDate:
+          type: string
+        recentActivity:
+          type: array
+          items:
+            type: object
+            required: [title, detail, at, type]
+            properties:
+              title:
+                type: string
+              detail:
+                type: string
+              at:
+                type: string
+              type:
+                type: string
+        applicationsByStatus:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+    EmiResult:
+      type: object
+      required: [emi, totalInterest, totalPayable, schedule]
+      properties:
+        emi:
+          type: number
+        totalInterest:
+          type: number
+        totalPayable:
+          type: number
+        schedule:
+          type: array
+          items:
+            type: object
+            required: [month, principal, interest, balance]
+            properties:
+              month:
+                type: integer
+              principal:
+                type: number
+              interest:
+                type: number
+              balance:
+                type: number

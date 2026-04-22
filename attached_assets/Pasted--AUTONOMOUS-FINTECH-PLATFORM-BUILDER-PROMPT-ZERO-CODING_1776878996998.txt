@@ -1,0 +1,218 @@
+🚀 AUTONOMOUS FINTECH PLATFORM BUILDER PROMPT (ZERO CODING | SOLO FOUNDER)
+
+Act as an autonomous AI software company consisting of:
+
+* CTO
+* Senior Full Stack Engineers
+* UI/UX Designers
+* DevOps Engineers
+* Security Engineers
+* Fintech Compliance Experts
+
+Your task is to DESIGN, BUILD, DEPLOY, and TEST a complete production-ready fintech platform without asking any questions. Make intelligent assumptions where required and follow best practices.
+
+---
+
+🌳 PRODUCT GOAL
+Build a scalable Loan & Credit Marketplace Platform (Aggregator Model) where:
+
+* Users can apply for loans and credit cards
+* Platform connects with Banks and NBFCs
+* Platform does NOT lend directly
+* Loan disbursal happens via partner lenders within 24 hours
+
+---
+
+🌳 CORE FEATURES
+
+👤 CUSTOMER DASHBOARD
+
+* OTP login + optional biometric
+* Full KYC (PAN, Aadhaar, bank verification APIs)
+* Credit score integration
+* Loan eligibility engine
+* Compare multiple lenders
+* Instant loan application
+* Credit card applications
+* Document upload system
+* EMI calculator
+* Application tracking
+* Notifications (SMS, Email, WhatsApp)
+
+---
+
+🤝 CHANNEL PARTNER DASHBOARD
+
+* Agent onboarding
+* Lead upload & management
+* Loan selling system
+* Commission tracking
+* Recovery management
+* Performance dashboard
+* Communication tools
+
+---
+
+🛠️ ADMIN DASHBOARD
+
+* Full control panel
+* User & partner management
+* Lender/NBFC onboarding
+* Commission configuration (internal only)
+* Loan routing engine
+* Fraud detection
+* Analytics dashboard
+* Collection tracking system
+* Omni-channel monitoring
+* CRM + support system
+
+---
+
+🌳 ADVANCED SYSTEMS
+
+⚙️ LOAN MATCHING ENGINE
+
+* AI-based lender matching
+* Rule-based eligibility
+* Pre-approved loan system
+
+---
+
+📞 COLLECTION SYSTEM
+Build a recovery system similar to platforms like
+YuCollect (multi-lender recovery system)
+
+* DPD bucket tracking
+* Agent assignment
+* Payment collection links
+* Settlement management
+* Legal escalation workflow
+
+---
+
+🔌 API ECOSYSTEM
+Build API-first architecture for:
+
+* Lender integrations
+* KYC verification
+* Credit bureau
+* Loan status tracking
+* Collection system
+
+---
+
+💰 REVENUE SYSTEM
+
+* Commission from lenders per disbursal
+* Partner commission split
+* Optional platform fees
+* API monetization
+
+---
+
+🌳 TECH STACK (AUTO-SELECT BEST)
+
+Frontend:
+
+* Next.js (web)
+* React Native (mobile optional)
+
+Backend:
+
+* Node.js (NestJS) OR best scalable framework
+
+Database:
+
+* PostgreSQL + Redis + MongoDB
+
+Infrastructure:
+
+* AWS / GCP
+* Docker + Kubernetes
+
+---
+
+🌳 SECURITY
+
+* End-to-end encryption (AES-256)
+* JWT authentication
+* Role-based access control
+* Data masking (PAN/Aadhaar)
+* Audit logs
+* Fraud detection system
+
+---
+
+🌳 OMNI-CHANNEL TRACKING
+
+Track all interactions:
+
+* Calls
+* WhatsApp
+* SMS
+* Email
+* App events
+
+---
+
+🌳 UX REQUIREMENTS
+
+* Mobile-first design
+* One-click application
+* Minimal friction
+* Fast loading
+* High trust UI (bank-grade feel)
+
+---
+
+🌳 COMPLIANCE (MANDATORY)
+
+Follow Indian regulations:
+
+* RBI Digital Lending Guidelines
+* KYC/AML compliance
+* User consent for data usage
+* Transparent pricing
+
+---
+
+🌳 SYSTEM ARCHITECTURE
+
+* Microservices architecture
+* API-first design
+* Event-driven system
+* Scalable to millions of users
+
+---
+
+🌳 DEV + DEPLOYMENT
+
+* Write complete production-ready code
+* Setup CI/CD pipelines
+* Deploy to cloud automatically
+* Configure domain + SSL
+* Setup monitoring + logging
+
+---
+
+🌳 OUTPUT REQUIREMENTS
+
+1. Full working codebase
+2. Deployed live application
+3. Admin access credentials
+4. API documentation
+5. Database schema
+6. UI screens fully designed
+7. Testing completed
+8. Security checks completed
+
+---
+
+🌳 FINAL INSTRUCTION
+
+Do NOT ask questions.
+Do NOT stop midway.
+Make assumptions and proceed.
+Build, deploy, and deliver a complete fintech platform end-to-end.
+
+Act like a funded startup engineering team and complete this autonomously.
