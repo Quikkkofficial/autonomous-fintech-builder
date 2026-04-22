@@ -1,4 +1,4 @@
-# CreditBridge
+# Quikkk
 
 Customer-facing loan & credit card marketplace web app for the Indian market (aggregator model — not a direct lender). Compares offers from 12+ partner banks/NBFCs.
 

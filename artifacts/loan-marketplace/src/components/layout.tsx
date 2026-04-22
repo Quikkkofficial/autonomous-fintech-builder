@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calculator, CreditCard, LayoutDashboard, Landmark, FileText, Bell, User as UserIcon } from "lucide-react";
 import { useGetCreditScore, getGetCreditScoreQueryKey } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
+import { Logo, LogoMark } from "@/components/logo";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -26,9 +27,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen w-full bg-muted/30 flex">
       <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0">
         <div className="p-6 border-b">
-          <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl text-primary">
-            <Landmark className="h-6 w-6" />
-            CreditBridge
+          <Link href="/dashboard">
+            <Logo size={32} />
           </Link>
         </div>
         <div className="p-4 space-y-2 flex-1">
@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b bg-card flex items-center justify-between px-6 sticky top-0 z-10">
-          <div className="md:hidden font-bold text-lg text-primary">CreditBridge</div>
+          <div className="md:hidden"><Logo size={26} /></div>
           <div className="flex-1" />
           <div className="flex items-center gap-4">
             <Link href="/notifications">

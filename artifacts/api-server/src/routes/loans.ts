@@ -92,7 +92,7 @@ router.post("/loan-applications", requireAuth, async (req, res) => {
   const now = new Date();
   const expectedDisbursal = new Date(now.getTime() + lender.approvalHours * 60 * 60 * 1000);
   const history = [
-    { status: "submitted", at: now.toISOString(), note: "Application received by CreditBridge" },
+    { status: "submitted", at: now.toISOString(), note: "Application received by Quikkk" },
     { status: "under_review", at: new Date(now.getTime() + 60_000).toISOString(), note: `Forwarded to ${lender.name} underwriting` },
   ];
   await db.insert(loanApplicationsTable).values({

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Landmark, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { LogoMark } from "@/components/logo";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Login() {
@@ -63,10 +64,10 @@ export default function Login() {
     <div className="min-h-screen bg-muted/50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg border-primary/10">
         <CardHeader className="text-center pb-8">
-          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Landmark className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-4">
+            <LogoMark size={56} />
           </div>
-          <CardTitle className="text-2xl">Welcome to CreditBridge</CardTitle>
+          <CardTitle className="text-2xl">Welcome to Quikkk</CardTitle>
           <CardDescription>
             {step === "phone" ? "Enter your phone number to continue" : `Enter the OTP sent to ${phone}`}
           </CardDescription>

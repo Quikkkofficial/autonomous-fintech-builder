@@ -102,7 +102,7 @@ router.post("/kyc", requireAuth, async (req, res) => {
     id: genId("ntf"),
     userId,
     channel: "email",
-    title: "Welcome to CreditBridge",
+    title: "Welcome to Quikkk",
     message: "Your account is fully active. Explore offers from 12+ partner banks and NBFCs.",
   });
 

@@ -17,7 +17,7 @@ export default function Lenders() {
     <div className="space-y-6 max-w-6xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Our partner network</h1>
-        <p className="text-muted-foreground mt-1">12+ regulated banks and NBFCs work with CreditBridge.</p>
+        <p className="text-muted-foreground mt-1">12+ regulated banks and NBFCs work with Quikkk.</p>
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
