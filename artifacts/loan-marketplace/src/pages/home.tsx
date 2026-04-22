@@ -112,7 +112,7 @@ function Hero() {
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
             Money,{" "}
             <span className="relative inline-block">
-              <span className="relative z-10 bg-gradient-to-br from-primary to-emerald-700 bg-clip-text text-transparent">
+              <span className="relative z-10 bg-gradient-to-br from-red-600 to-black bg-clip-text text-transparent">
                 quikkk-ly
               </span>
               <svg
@@ -156,9 +156,9 @@ function Hero() {
           </div>
 
           <div className="flex flex-wrap items-center gap-6 pt-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-2"><Lock className="w-4 h-4 text-emerald-600" /> 256-bit encrypted</span>
-            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-600" /> Soft credit pull</span>
-            <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-emerald-600" /> 60-second match</span>
+            <span className="flex items-center gap-2"><Lock className="w-4 h-4 text-red-600" /> 256-bit encrypted</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-red-600" /> Soft credit pull</span>
+            <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-red-600" /> 60-second match</span>
           </div>
         </div>
 
@@ -186,7 +186,7 @@ function HeroVisual() {
                     <div className="font-bold text-sm">HDFC Bank</div>
                     <div className="text-[10px] text-muted-foreground">Personal loan</div>
                   </div>
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[9px] px-1.5">
+                  <Badge className="bg-red-50 text-red-700 border-red-200 text-[9px] px-1.5">
                     Pre-approved
                   </Badge>
                 </div>
@@ -227,8 +227,8 @@ function HeroVisual() {
 
       {/* Floating cards */}
       <div className="absolute top-6 -left-2 md:left-4 bg-card border rounded-2xl p-4 shadow-xl flex items-center gap-3 -rotate-6 max-w-[200px]">
-        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+        <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+          <CheckCircle2 className="w-5 h-5 text-red-600" />
         </div>
         <div>
           <div className="text-xs font-semibold">Approved!</div>
@@ -240,15 +240,15 @@ function HeroVisual() {
         <div className="flex items-center gap-2 mb-1.5">
           <TrendingUp className="w-4 h-4 text-primary" />
           <span className="text-xs font-semibold">CIBIL: 782</span>
-          <Badge className="bg-emerald-100 text-emerald-700 border-0 text-[9px] px-1.5">Excellent</Badge>
+          <Badge className="bg-red-50 text-red-700 border-0 text-[9px] px-1.5">Excellent</Badge>
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-          <div className="h-full w-[88%] bg-gradient-to-r from-amber-400 to-emerald-500 rounded-full" />
+          <div className="h-full w-[88%] bg-gradient-to-r from-amber-400 to-red-500 rounded-full" />
         </div>
         <div className="text-[10px] text-muted-foreground mt-1.5">Free monthly updates</div>
       </div>
 
-      <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:right-12 bg-gradient-to-br from-primary to-emerald-800 text-white rounded-2xl p-3 shadow-xl rotate-3">
+      <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:right-12 bg-gradient-to-br from-black to-red-600 text-white rounded-2xl p-3 shadow-xl rotate-3">
         <Zap className="w-5 h-5 mb-1" />
         <div className="text-[10px] font-semibold leading-tight">
           60-sec
@@ -282,12 +282,12 @@ function SocialProof() {
 
 function ProductGrid() {
   const products = [
-    { icon: Landmark, name: "Personal Loan", desc: "₹25K – ₹40L", rate: "from 10.49% p.a.", color: "from-emerald-50 to-teal-50", iconBg: "bg-emerald-100 text-emerald-700" },
-    { icon: HomeIcon, name: "Home Loan", desc: "₹5L – ₹5Cr", rate: "from 8.40% p.a.", color: "from-blue-50 to-indigo-50", iconBg: "bg-blue-100 text-blue-700" },
-    { icon: Car, name: "Auto Loan", desc: "₹1L – ₹50L", rate: "from 9.25% p.a.", color: "from-amber-50 to-orange-50", iconBg: "bg-amber-100 text-amber-700" },
-    { icon: Briefcase, name: "Business Loan", desc: "₹1L – ₹2Cr", rate: "from 14.50% p.a.", color: "from-purple-50 to-fuchsia-50", iconBg: "bg-purple-100 text-purple-700" },
-    { icon: GraduationCap, name: "Education Loan", desc: "₹50K – ₹1Cr", rate: "from 9.95% p.a.", color: "from-rose-50 to-pink-50", iconBg: "bg-rose-100 text-rose-700" },
-    { icon: CreditCard, name: "Credit Cards", desc: "8+ premium cards", rate: "Lifetime free options", color: "from-slate-50 to-slate-100", iconBg: "bg-slate-200 text-slate-700" },
+    { icon: Landmark, name: "Personal Loan", desc: "₹25K – ₹40L", rate: "from 10.49% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
+    { icon: HomeIcon, name: "Home Loan", desc: "₹5L – ₹5Cr", rate: "from 8.40% p.a.", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
+    { icon: Car, name: "Auto Loan", desc: "₹1L – ₹50L", rate: "from 9.25% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
+    { icon: Briefcase, name: "Business Loan", desc: "₹1L – ₹2Cr", rate: "from 14.50% p.a.", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
+    { icon: GraduationCap, name: "Education Loan", desc: "₹50K – ₹1Cr", rate: "from 9.95% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
+    { icon: CreditCard, name: "Credit Cards", desc: "8+ premium cards", rate: "Lifetime free options", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
   ];
   return (
     <section id="products" className="py-24 px-6">
@@ -334,7 +334,7 @@ function Stats() {
   ];
   return (
     <section className="py-16 px-6">
-      <div className="max-w-6xl mx-auto bg-gradient-to-br from-primary to-emerald-900 rounded-3xl p-10 md:p-14 text-white relative overflow-hidden">
+      <div className="max-w-6xl mx-auto bg-gradient-to-br from-black via-zinc-900 to-red-700 rounded-3xl p-10 md:p-14 text-white relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
         <div className="relative grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -430,7 +430,7 @@ function RateComparison() {
                 </div>
                 <div>
                   <div className="font-semibold">{r.name}</div>
-                  {i === 0 && <Badge className="mt-0.5 bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px]">Best rate</Badge>}
+                  {i === 0 && <Badge className="mt-0.5 bg-red-50 text-red-700 border-red-200 text-[10px]">Best rate</Badge>}
                 </div>
               </div>
               <div className="col-span-3">
@@ -497,7 +497,7 @@ function Testimonials() {
               </div>
               <p className="text-foreground/90 leading-relaxed mb-6">&ldquo;{r.text}&rdquo;</p>
               <div className="flex items-center gap-3 pt-4 border-t">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-700 text-white font-bold flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-black text-white font-bold flex items-center justify-center">
                   {r.name[0]}
                 </div>
                 <div>
@@ -553,7 +553,7 @@ function Trust() {
 function CTA() {
   return (
     <section className="py-20 px-6">
-      <div className="max-w-5xl mx-auto bg-gradient-to-br from-primary via-emerald-800 to-emerald-900 rounded-[2.5rem] p-12 md:p-16 text-white relative overflow-hidden">
+      <div className="max-w-5xl mx-auto bg-gradient-to-br from-black via-zinc-900 to-red-700 rounded-[2.5rem] p-12 md:p-16 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/20 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         <div className="relative text-center max-w-2xl mx-auto space-y-6">

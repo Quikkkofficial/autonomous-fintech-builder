@@ -31,19 +31,19 @@ export function LogoMark({ size = 32 }: { size?: number }) {
     >
       <defs>
         <linearGradient id="quikkk-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="hsl(160 84% 28%)" />
-          <stop offset="100%" stopColor="hsl(160 84% 16%)" />
+          <stop offset="0%" stopColor="#111111" />
+          <stop offset="100%" stopColor="#000000" />
         </linearGradient>
         <linearGradient id="quikkk-bolt" x1="0" y1="0" x2="0" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFD668" />
-          <stop offset="100%" stopColor="#F59E0B" />
+          <stop offset="0%" stopColor="#FF4444" />
+          <stop offset="100%" stopColor="#DC2626" />
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="40" height="40" rx="10" fill="url(#quikkk-grad)" />
       <path
         d="M22 8 L11 22 H19 L17 32 L29 17 H21 L22 8 Z"
         fill="url(#quikkk-bolt)"
-        stroke="rgba(0,0,0,0.05)"
+        stroke="rgba(255,255,255,0.08)"
         strokeWidth="0.5"
       />
     </svg>
