@@ -19,7 +19,39 @@ router.get("/me", requireAuth, async (req, res) => {
     email: user.email ?? undefined,
     kycStatus: user.kycStatus,
     panMasked: user.panMasked ?? undefined,
+    role: user.role,
+    partnerCode: user.partnerCode ?? undefined,
     createdAt: user.createdAt.toISOString(),
+  });
+});
+
+router.post("/me/role", requireAuth, async (req, res) => {
+  const userId = (req as unknown as { userId: number }).userId;
+  const { role } = req.body ?? {};
+  const validRoles = ["customer", "admin", "sales_partner", "collection_partner"];
+  if (!validRoles.includes(role)) {
+    res.status(400).json({ error: "invalid_role" });
+    return;
+  }
+  const update: Record<string, unknown> = { role };
+  if ((role === "sales_partner" || role === "collection_partner")) {
+    const existing = (await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1))[0];
+    if (!existing?.partnerCode) {
+      update["partnerCode"] = `${role === "sales_partner" ? "QSP" : "QCP"}-${userId.toString().padStart(5, "0")}`;
+    }
+  }
+  const updated = await db.update(usersTable).set(update).where(eq(usersTable.id, userId)).returning();
+  const u = updated[0]!;
+  res.json({
+    id: String(u.id),
+    phone: u.phone,
+    name: u.name ?? undefined,
+    email: u.email ?? undefined,
+    role: u.role,
+    partnerCode: u.partnerCode ?? undefined,
+    kycStatus: u.kycStatus,
+    panMasked: u.panMasked ?? undefined,
+    createdAt: u.createdAt.toISOString(),
   });
 });
 

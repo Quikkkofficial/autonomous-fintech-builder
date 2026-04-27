@@ -50,6 +50,8 @@ router.post("/auth/otp/verify", async (req, res) => {
     email: user.email ?? undefined,
     kycStatus: user.kycStatus,
     panMasked: user.panMasked ?? undefined,
+    role: user.role,
+    partnerCode: user.partnerCode ?? undefined,
     createdAt: user.createdAt.toISOString(),
   });
 });

@@ -1,9 +1,14 @@
 import React, { createContext, useContext, ReactNode } from "react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
-import type { User } from "@workspace/api-client-react";
+import type { User as BaseUser } from "@workspace/api-client-react";
+
+export type AuthUser = BaseUser & {
+  role?: "customer" | "admin" | "sales_partner" | "collection_partner";
+  partnerCode?: string;
+};
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isLoading: boolean;
   error: Error | null;
 }
@@ -25,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: user || null,
+        user: (user as AuthUser) || null,
         isLoading,
         error: error as Error | null,
       }}

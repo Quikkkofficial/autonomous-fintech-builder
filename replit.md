@@ -27,6 +27,26 @@ Customer-facing loan & credit card marketplace web app for the Indian market (ag
 - **Notifications**: SMS/email/WhatsApp/app notifications generated server-side on key actions.
 - **Dashboard**: aggregated stats (active apps, approved/disbursed amounts, score, EMI due).
 - **Profile**: KYC details, credit score with factors, logout.
+- **Admin panel** (`/admin`): overview KPIs + 30-day chart, user management with role assignment, application status workflow, lender configuration, partner payout approval, collections oversight.
+- **Channel partner panel** (`/partner`): partner dashboard with conversion funnel, lead list, "create new lead" wizard (creates customer + loan app referred to partner), payout/earnings ledger.
+- **Collection partner panel** (`/collection`): DPD-bucketed dashboard, case queue (mine / unassigned / all), case detail with follow-up logging (channel, outcome, promise-to-pay) and payment recovery, follow-up history.
+
+## Roles & demo accounts
+
+`usersTable.role` ∈ `customer` | `admin` | `sales_partner` | `collection_partner`. Login with these phone numbers (OTP shown in toast) to land in the matching panel:
+- `9000000001` → Admin Demo
+- `9000000002` → Sales Partner Demo (`QSP-00001`)
+- `9000000003` → Collection Demo (`QCP-00001`)
+
+Sample loans seeded under the demo partner (some marked overdue and assigned to the demo collector) so dashboards have data on first boot.
+
+## Backend role routes
+
+- `/admin/*` (requires `admin`): `stats`, `timeseries`, `users`, `applications`, `lenders`, `payouts`, `collections`, `recent-activity`, `followups`.
+- `/partner/*` (requires `sales_partner`): `stats`, `leads` (GET/POST), `payouts`, `lenders`, `timeseries`.
+- `/collection/*` (requires `collection_partner`): `stats`, `cases?filter=mine|unassigned|all`, `cases/:id` (with customer & follow-ups), `cases/:id/{assign,followup,payment}`, `followups`.
+
+`requireRole(...)` middleware in `lib/session.ts` enforces this. Frontend `ProtectedRoute` accepts `allowedRoles` and redirects to the user's home panel via `roleHomePath`.
 
 ## Important conventions
 

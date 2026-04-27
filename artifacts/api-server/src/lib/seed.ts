@@ -1,6 +1,15 @@
-import { db, lendersTable, creditCardsTable } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import {
+  db,
+  lendersTable,
+  creditCardsTable,
+  usersTable,
+  loanApplicationsTable,
+  partnerPayoutsTable,
+  collectionFollowupsTable,
+} from "@workspace/db";
+import { sql, eq } from "drizzle-orm";
 import { logger } from "./logger";
+import { calcEmi, genId } from "./utils";
 
 const LENDERS = [
   {
@@ -357,4 +366,104 @@ export async function seedIfEmpty(): Promise<void> {
     CARDS.map((c) => ({ ...c, perks: [...c.perks] })),
   );
   logger.info({ lenders: LENDERS.length, cards: CARDS.length }, "Seed complete");
+}
+
+async function ensureUser(phone: string, name: string, role: string, partnerCode?: string): Promise<{ id: number; phone: string; name: string | null; role: string }> {
+  let user = (await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1))[0];
+  if (!user) {
+    user = (await db.insert(usersTable).values({ phone, name, role, partnerCode: partnerCode ?? null }).returning())[0]!;
+    logger.info({ phone, role }, "Seeded demo role user");
+  } else if (user.role !== role) {
+    user = (await db.update(usersTable).set({ role, partnerCode: partnerCode ?? user.partnerCode, name: user.name ?? name }).where(eq(usersTable.id, user.id)).returning())[0]!;
+    logger.info({ phone, role }, "Updated demo role user");
+  }
+  return user;
+}
+
+export async function seedDemoRoles(): Promise<void> {
+  const admin = await ensureUser("9000000001", "Admin Demo", "admin");
+  const partner = await ensureUser("9000000002", "Sales Partner Demo", "sales_partner", "QSP-00001");
+  const collector = await ensureUser("9000000003", "Collection Demo", "collection_partner", "QCP-00001");
+
+  // Seed sample customers + loan apps for partner & collector demo
+  const existingPartnerLeads = await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.referredByPartnerId, partner.id)).limit(1);
+  if (existingPartnerLeads.length === 0) {
+    const customers = [
+      { phone: "9111100001", name: "Rahul Verma" },
+      { phone: "9111100002", name: "Priya Sharma" },
+      { phone: "9111100003", name: "Amit Patel" },
+      { phone: "9111100004", name: "Sneha Iyer" },
+      { phone: "9111100005", name: "Vikram Singh" },
+      { phone: "9111100006", name: "Kavita Reddy" },
+    ];
+    const seededCustomers: Array<{ id: number; name: string; phone: string }> = [];
+    for (const c of customers) {
+      let u = (await db.select().from(usersTable).where(eq(usersTable.phone, c.phone)).limit(1))[0];
+      if (!u) {
+        u = (await db.insert(usersTable).values({ phone: c.phone, name: c.name }).returning())[0]!;
+      }
+      seededCustomers.push({ id: u.id, name: c.name, phone: c.phone });
+    }
+
+    const lenders = await db.select().from(lendersTable).limit(5);
+    const lenderList = lenders.length > 0 ? lenders : [{ id: "hdfc", name: "HDFC Bank", minRate: "10.5" }] as any;
+
+    const samples = [
+      { idx: 0, type: "personal", amount: 250000, tenure: 36, status: "submitted", dpd: 0 },
+      { idx: 1, type: "home", amount: 4500000, tenure: 240, status: "approved", dpd: 0 },
+      { idx: 2, type: "auto", amount: 800000, tenure: 60, status: "disbursed", dpd: 0 },
+      { idx: 3, type: "personal", amount: 350000, tenure: 24, status: "disbursed", dpd: 15 },
+      { idx: 4, type: "business", amount: 1500000, tenure: 48, status: "disbursed", dpd: 45 },
+      { idx: 5, type: "personal", amount: 200000, tenure: 36, status: "disbursed", dpd: 95 },
+    ];
+    for (const s of samples) {
+      const cust = seededCustomers[s.idx]!;
+      const lender = lenderList[s.idx % lenderList.length]!;
+      const interestRate = Number(lender.minRate ?? 11) + 1;
+      const emi = calcEmi(s.amount, interestRate, s.tenure).toFixed(2);
+      const id = genId("LOAN");
+      const ref = genId("REF");
+      const history = [
+        { status: "submitted", at: new Date(Date.now() - 30 * 86400000).toISOString(), note: "Lead created by partner" },
+      ];
+      if (s.status !== "submitted") history.push({ status: "approved", at: new Date(Date.now() - 25 * 86400000).toISOString(), note: "KYC verified" });
+      if (s.status === "disbursed") history.push({ status: "disbursed", at: new Date(Date.now() - 22 * 86400000).toISOString(), note: "Disbursed to bank account" });
+      const outstanding = s.status === "disbursed" ? s.amount * 0.85 : null;
+      const commission = s.status === "disbursed" ? (s.amount * 0.012).toFixed(2) : null;
+      await db.insert(loanApplicationsTable).values({
+        id,
+        userId: cust.id,
+        lenderId: lender.id,
+        lenderName: lender.name,
+        type: s.type,
+        amount: String(s.amount),
+        tenureMonths: s.tenure,
+        interestRate: String(interestRate),
+        emi,
+        status: s.status,
+        referenceCode: ref,
+        statusHistory: history,
+        referredByPartnerId: partner.id,
+        commissionAmount: commission,
+        commissionPaid: false,
+        assignedCollectorId: s.dpd > 0 ? collector.id : null,
+        dpd: s.dpd,
+        outstandingAmount: outstanding ? String(outstanding.toFixed(2)) : null,
+        recoveredAmount: "0",
+        customerName: cust.name,
+        customerPhone: cust.phone,
+        purpose: `${s.type} requirement`,
+      });
+      if (commission) {
+        await db.insert(partnerPayoutsTable).values({
+          partnerId: partner.id,
+          applicationId: id,
+          amount: commission,
+          status: s.idx === 2 ? "paid" : "pending",
+          paidAt: s.idx === 2 ? new Date(Date.now() - 10 * 86400000) : null,
+        });
+      }
+    }
+    logger.info("Seeded sample partner leads and overdue cases");
+  }
 }

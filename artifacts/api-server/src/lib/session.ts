@@ -66,3 +66,27 @@ export function requireAuth(
   (req as unknown as { userId: number }).userId = userId;
   next();
 }
+
+export function requireRole(...allowed: string[]) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const userId = getUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const { db, usersTable } = await import("@workspace/db");
+    const { eq } = await import("drizzle-orm");
+    const user = (await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1))[0];
+    if (!user) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    if (!allowed.includes(user.role)) {
+      res.status(403).json({ error: "forbidden", required: allowed, have: user.role });
+      return;
+    }
+    (req as unknown as { userId: number }).userId = userId;
+    (req as unknown as { userRole: string }).userRole = user.role;
+    next();
+  };
+}

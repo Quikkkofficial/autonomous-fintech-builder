@@ -15,6 +15,8 @@ export const usersTable = pgTable("users", {
   phone: varchar("phone", { length: 20 }).notNull().unique(),
   name: varchar("name", { length: 200 }),
   email: varchar("email", { length: 200 }),
+  role: varchar("role", { length: 30 }).notNull().default("customer"),
+  partnerCode: varchar("partner_code", { length: 30 }),
   kycStatus: varchar("kyc_status", { length: 20 }).notNull().default("pending"),
   panMasked: varchar("pan_masked", { length: 20 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -94,6 +96,15 @@ export const loanApplicationsTable = pgTable("loan_applications", {
   referenceCode: varchar("reference_code", { length: 30 }),
   expectedDisbursalAt: timestamp("expected_disbursal_at", { withTimezone: true }),
   statusHistory: jsonb("status_history").$type<Array<{ status: string; at: string; note: string }>>().notNull(),
+  referredByPartnerId: integer("referred_by_partner_id"),
+  commissionAmount: numeric("commission_amount"),
+  commissionPaid: boolean("commission_paid").notNull().default(false),
+  assignedCollectorId: integer("assigned_collector_id"),
+  dpd: integer("dpd").notNull().default(0),
+  outstandingAmount: numeric("outstanding_amount"),
+  recoveredAmount: numeric("recovered_amount").notNull().default("0"),
+  customerName: varchar("customer_name", { length: 200 }),
+  customerPhone: varchar("customer_phone", { length: 20 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -125,4 +136,26 @@ export const creditScoresTable = pgTable("credit_scores", {
   band: varchar("band", { length: 20 }).notNull(),
   factors: jsonb("factors").$type<Array<{ label: string; impact: string; detail?: string }>>().notNull(),
   asOf: timestamp("as_of", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const collectionFollowupsTable = pgTable("collection_followups", {
+  id: serial("id").primaryKey(),
+  applicationId: varchar("application_id", { length: 50 }).notNull(),
+  collectorId: integer("collector_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  channel: varchar("channel", { length: 20 }).notNull(),
+  outcome: varchar("outcome", { length: 30 }).notNull(),
+  notes: text("notes"),
+  promisedAmount: numeric("promised_amount"),
+  promisedDate: varchar("promised_date", { length: 30 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const partnerPayoutsTable = pgTable("partner_payouts", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  applicationId: varchar("application_id", { length: 50 }).notNull(),
+  amount: numeric("amount").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

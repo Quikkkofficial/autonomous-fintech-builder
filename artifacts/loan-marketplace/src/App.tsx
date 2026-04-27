@@ -23,12 +23,38 @@ import About from "@/pages/about";
 import Terms from "@/pages/terms";
 import NotFound from "@/pages/not-found";
 
+import AdminOverview from "@/pages/admin/overview";
+import AdminUsers from "@/pages/admin/users";
+import AdminApplications from "@/pages/admin/applications";
+import AdminLenders from "@/pages/admin/lenders";
+import AdminPayouts from "@/pages/admin/payouts";
+import AdminCollections from "@/pages/admin/collections";
+
+import PartnerOverview from "@/pages/partner/overview";
+import PartnerLeads from "@/pages/partner/leads";
+import PartnerNewLead from "@/pages/partner/new-lead";
+import PartnerPayouts from "@/pages/partner/payouts";
+
+import CollectionOverview from "@/pages/collection/overview";
+import CollectionCases from "@/pages/collection/cases";
+import CollectionCaseDetail from "@/pages/collection/case-detail";
+import CollectionFollowups from "@/pages/collection/followups";
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 });
 
 function P({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute><Layout>{children}</Layout></ProtectedRoute>;
+}
+function AP({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute allowedRoles={["admin"]}>{children}</ProtectedRoute>;
+}
+function PP({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute allowedRoles={["sales_partner"]}>{children}</ProtectedRoute>;
+}
+function CP({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute allowedRoles={["collection_partner"]}>{children}</ProtectedRoute>;
 }
 
 function Router() {
@@ -49,6 +75,24 @@ function Router() {
       <Route path="/tools/emi"><P><EmiCalculator /></P></Route>
       <Route path="/notifications"><P><Notifications /></P></Route>
       <Route path="/profile"><P><Profile /></P></Route>
+
+      <Route path="/admin"><AP><AdminOverview /></AP></Route>
+      <Route path="/admin/users"><AP><AdminUsers /></AP></Route>
+      <Route path="/admin/applications"><AP><AdminApplications /></AP></Route>
+      <Route path="/admin/lenders"><AP><AdminLenders /></AP></Route>
+      <Route path="/admin/payouts"><AP><AdminPayouts /></AP></Route>
+      <Route path="/admin/collections"><AP><AdminCollections /></AP></Route>
+
+      <Route path="/partner"><PP><PartnerOverview /></PP></Route>
+      <Route path="/partner/leads"><PP><PartnerLeads /></PP></Route>
+      <Route path="/partner/leads/new"><PP><PartnerNewLead /></PP></Route>
+      <Route path="/partner/payouts"><PP><PartnerPayouts /></PP></Route>
+
+      <Route path="/collection"><CP><CollectionOverview /></CP></Route>
+      <Route path="/collection/cases"><CP><CollectionCases /></CP></Route>
+      <Route path="/collection/cases/:id"><CP><CollectionCaseDetail /></CP></Route>
+      <Route path="/collection/followups"><CP><CollectionFollowups /></CP></Route>
+
       <Route component={NotFound} />
     </Switch>
   );

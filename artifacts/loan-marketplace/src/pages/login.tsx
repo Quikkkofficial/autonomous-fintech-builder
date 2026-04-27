@@ -47,14 +47,14 @@ export default function Login() {
     if (otp.length < 6) return;
 
     try {
-      const user = await verifyOtp.mutateAsync({ data: { phone, otp } });
+      const user = await verifyOtp.mutateAsync({ data: { phone, otp } }) as any;
       await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-      
-      if (user.kycStatus === "pending") {
-        setLocation("/kyc");
-      } else {
-        setLocation("/dashboard");
-      }
+      const role = user.role ?? "customer";
+      if (role === "admin") setLocation("/admin");
+      else if (role === "sales_partner") setLocation("/partner");
+      else if (role === "collection_partner") setLocation("/collection");
+      else if (user.kycStatus === "pending") setLocation("/kyc");
+      else setLocation("/dashboard");
     } catch (err) {
       toast({ title: "Invalid OTP", variant: "destructive" });
     }
@@ -71,6 +71,16 @@ export default function Login() {
           <CardDescription>
             {step === "phone" ? "Enter your phone number to continue" : `Enter the OTP sent to ${phone}`}
           </CardDescription>
+          {step === "phone" && (
+            <div className="mt-4 p-3 bg-muted/60 rounded-lg text-left">
+              <p className="text-xs font-semibold mb-1">Demo accounts</p>
+              <ul className="text-xs text-muted-foreground space-y-0.5 font-mono">
+                <li>9000000001 — Admin</li>
+                <li>9000000002 — Channel Partner</li>
+                <li>9000000003 — Collection Partner</li>
+              </ul>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {step === "phone" ? (

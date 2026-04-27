@@ -2,16 +2,28 @@ import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { roleHomePath } from "@/lib/api";
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+export function ProtectedRoute({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles?: Array<string>;
+}) {
   const { user, isLoading, error } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && (error || !user)) {
+    if (isLoading) return;
+    if (error || !user) {
       setLocation("/login");
+      return;
     }
-  }, [user, isLoading, error, setLocation]);
+    if (allowedRoles && !allowedRoles.includes(user.role ?? "customer")) {
+      setLocation(roleHomePath(user.role));
+    }
+  }, [user, isLoading, error, setLocation, allowedRoles]);
 
   if (isLoading) {
     return (
@@ -21,9 +33,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (error || !user) {
-    return null; // Will redirect
-  }
+  if (error || !user) return null;
+  if (allowedRoles && !allowedRoles.includes(user.role ?? "customer")) return null;
 
   return <>{children}</>;
 }

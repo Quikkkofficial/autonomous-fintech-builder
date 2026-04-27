@@ -10,6 +10,9 @@ import cardsRouter from "./cards";
 import notificationsRouter from "./notifications";
 import dashboardRouter from "./dashboard";
 import toolsRouter from "./tools";
+import adminRouter from "./admin";
+import partnerRouter from "./partner";
+import collectionRouter from "./collection";
 
 const router: IRouter = Router();
 
@@ -24,5 +27,8 @@ router.use(cardsRouter);
 router.use(notificationsRouter);
 router.use(dashboardRouter);
 router.use(toolsRouter);
+router.use(adminRouter);
+router.use(partnerRouter);
+router.use(collectionRouter);
 
 export default router;

@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { seedIfEmpty } from "./lib/seed";
+import { seedIfEmpty, seedDemoRoles } from "./lib/seed";
 
 const rawPort = process.env["PORT"];
 
@@ -19,6 +19,7 @@ if (Number.isNaN(port) || port <= 0) {
 async function start() {
   try {
     await seedIfEmpty();
+    await seedDemoRoles();
   } catch (err) {
     logger.error({ err }, "Seed failed");
   }
