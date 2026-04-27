@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Logo, LogoMark } from "@/components/logo";
+import { Logo } from "@/components/logo";
 import {
   ArrowRight,
   ShieldCheck,
@@ -24,6 +24,8 @@ import {
   Landmark,
   Sparkles,
   ChevronRight,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -66,12 +68,15 @@ function Nav() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Logo size={34} />
+        <Link href="/">
+          <Logo size={22} />
+        </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
           <a href="#products" className="hover:text-foreground transition-colors">Products</a>
           <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
           <a href="#rates" className="hover:text-foreground transition-colors">Rates</a>
           <a href="#trust" className="hover:text-foreground transition-colors">Trust & safety</a>
+          <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
         </nav>
         <div className="flex items-center gap-2">
           <Link href="/login">
@@ -89,25 +94,16 @@ function Nav() {
 function Hero() {
   return (
     <section className="relative pt-16 pb-24 px-6">
-      {/* Decorative blobs */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute top-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-accent/10 blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
+        <div className="absolute top-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-accent/5 blur-3xl" />
       </div>
 
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-7">
-          <Badge variant="outline" className="gap-1.5 px-3 py-1.5 bg-card/60 backdrop-blur-sm border-primary/20">
-            <Sparkles className="w-3.5 h-3.5 text-accent" />
-            <span className="text-xs">India's fastest credit marketplace</span>
+          <Badge variant="outline" className="gap-1.5 px-3 py-1.5 bg-card/60 backdrop-blur-sm border-primary/30">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs">India's smartest credit marketplace</span>
           </Badge>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
             Money,{" "}
@@ -124,7 +120,7 @@ function Hero() {
                 <path
                   d="M2 8 Q 50 2 100 6 T 198 4"
                   fill="none"
-                  stroke="hsl(var(--accent))"
+                  stroke="hsl(var(--primary))"
                   strokeWidth="3"
                   strokeLinecap="round"
                 />
@@ -134,8 +130,8 @@ function Hero() {
             in your account.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
-            Compare loans and credit cards from <strong className="text-foreground">12+ banks & NBFCs</strong> in
-            seconds. Get pre-approved offers, lock the best rate, and disburse — all from your phone.
+            Compare loan and credit card offers from <strong className="text-foreground">multiple regulated lenders</strong>{" "}
+            in seconds. Get pre-approved offers, lock the best rate, and disburse — all from your phone.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -171,22 +167,21 @@ function Hero() {
 function HeroVisual() {
   return (
     <div className="relative h-[480px] md:h-[540px]">
-      {/* Phone */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-[280px] h-[480px] bg-gradient-to-br from-slate-900 to-slate-800 rounded-[44px] p-3 shadow-2xl shadow-primary/30 rotate-2">
+        <div className="relative w-[280px] h-[480px] bg-gradient-to-br from-black to-zinc-800 rounded-[44px] p-3 shadow-2xl shadow-red-600/30 rotate-2">
           <div className="w-full h-full bg-card rounded-[34px] overflow-hidden flex flex-col">
             <div className="p-5 border-b">
-              <Logo size={26} />
+              <Logo size={20} />
             </div>
             <div className="p-5 space-y-3 flex-1">
               <div className="text-xs text-muted-foreground">Top match for you</div>
-              <div className="rounded-2xl p-4 border-2 border-primary/30 bg-primary/5 space-y-2">
+              <div className="rounded-2xl p-4 border-2 border-primary/40 bg-red-50 space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="font-bold text-sm">HDFC Bank</div>
-                    <div className="text-[10px] text-muted-foreground">Personal loan</div>
+                    <div className="font-bold text-sm">Best offer</div>
+                    <div className="text-[10px] text-muted-foreground">Personal loan • 36 mo</div>
                   </div>
-                  <Badge className="bg-red-50 text-red-700 border-red-200 text-[9px] px-1.5">
+                  <Badge className="bg-red-600 text-white border-0 text-[9px] px-1.5">
                     Pre-approved
                   </Badge>
                 </div>
@@ -203,13 +198,13 @@ function HeroVisual() {
               </div>
 
               {[
-                { name: "ICICI", rate: "11.25%", emi: "₹9,792" },
-                { name: "Axis", rate: "11.99%", emi: "₹9,962" },
-                { name: "Bajaj", rate: "12.50%", emi: "₹10,079" },
+                { label: "Option 2", rate: "11.25%", emi: "₹9,792" },
+                { label: "Option 3", rate: "11.99%", emi: "₹9,962" },
+                { label: "Option 4", rate: "12.50%", emi: "₹10,079" },
               ].map((l) => (
-                <div key={l.name} className="rounded-xl p-3 border bg-card flex justify-between items-center">
+                <div key={l.label} className="rounded-xl p-3 border bg-card flex justify-between items-center">
                   <div>
-                    <div className="font-medium text-xs">{l.name}</div>
+                    <div className="font-medium text-xs">{l.label}</div>
                     <div className="text-[10px] text-muted-foreground">{l.rate} p.a.</div>
                   </div>
                   <div className="text-xs font-semibold">{l.emi}</div>
@@ -225,7 +220,6 @@ function HeroVisual() {
         </div>
       </div>
 
-      {/* Floating cards */}
       <div className="absolute top-6 -left-2 md:left-4 bg-card border rounded-2xl p-4 shadow-xl flex items-center gap-3 -rotate-6 max-w-[200px]">
         <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
           <CheckCircle2 className="w-5 h-5 text-red-600" />
@@ -243,12 +237,12 @@ function HeroVisual() {
           <Badge className="bg-red-50 text-red-700 border-0 text-[9px] px-1.5">Excellent</Badge>
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-          <div className="h-full w-[88%] bg-gradient-to-r from-amber-400 to-red-500 rounded-full" />
+          <div className="h-full w-[88%] bg-gradient-to-r from-amber-400 to-red-600 rounded-full" />
         </div>
         <div className="text-[10px] text-muted-foreground mt-1.5">Free monthly updates</div>
       </div>
 
-      <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:right-12 bg-gradient-to-br from-black to-red-600 text-white rounded-2xl p-3 shadow-xl rotate-3">
+      <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:right-12 bg-gradient-to-br from-black to-red-700 text-white rounded-2xl p-3 shadow-xl rotate-3">
         <Zap className="w-5 h-5 mb-1" />
         <div className="text-[10px] font-semibold leading-tight">
           60-sec
@@ -261,18 +255,29 @@ function HeroVisual() {
 }
 
 function SocialProof() {
-  const partners = ["HDFC Bank", "ICICI", "Axis Bank", "SBI", "Kotak", "Bajaj Finserv", "Tata Capital", "IndusInd"];
+  const badges = [
+    { icon: ShieldCheck, label: "RBI-Compliant Network" },
+    { icon: Lock, label: "ISO 27001 Secured" },
+    { icon: Award, label: "Data-Privacy Certified" },
+    { icon: Users, label: "4.5L+ Happy Customers" },
+    { icon: Zap, label: "60-Second Matching" },
+    { icon: CheckCircle2, label: "Soft Credit Pull" },
+  ];
   return (
     <section className="py-12 border-y bg-muted/30">
       <div className="max-w-7xl mx-auto px-6">
         <p className="text-center text-xs uppercase tracking-widest text-muted-foreground mb-6 font-semibold">
-          Trusted by 4.5L+ Indians • RBI-regulated partners
+          Built on trust • Powered by regulated lending partners
         </p>
-        <div className="flex flex-wrap justify-center items-center gap-x-10 gap-y-4">
-          {partners.map((p) => (
-            <span key={p} className="text-lg md:text-xl font-bold text-muted-foreground/50 hover:text-foreground transition-colors">
-              {p}
-            </span>
+        <div className="flex flex-wrap justify-center items-center gap-3">
+          {badges.map((b) => (
+            <div
+              key={b.label}
+              className="flex items-center gap-2 px-4 py-2.5 bg-card border rounded-full text-sm"
+            >
+              <b.icon className="w-4 h-4 text-red-600" />
+              <span className="font-medium text-foreground/80">{b.label}</span>
+            </div>
           ))}
         </div>
       </div>
@@ -287,7 +292,7 @@ function ProductGrid() {
     { icon: Car, name: "Auto Loan", desc: "₹1L – ₹50L", rate: "from 9.25% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
     { icon: Briefcase, name: "Business Loan", desc: "₹1L – ₹2Cr", rate: "from 14.50% p.a.", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
     { icon: GraduationCap, name: "Education Loan", desc: "₹50K – ₹1Cr", rate: "from 9.95% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
-    { icon: CreditCard, name: "Credit Cards", desc: "8+ premium cards", rate: "Lifetime free options", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
+    { icon: CreditCard, name: "Credit Cards", desc: "Premium card range", rate: "Lifetime free options", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
   ];
   return (
     <section id="products" className="py-24 px-6">
@@ -297,9 +302,7 @@ function ProductGrid() {
             One platform, every need
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Pick your product</h2>
-          <p className="text-lg text-muted-foreground">
-            Every category. Every leading lender. One application.
-          </p>
+          <p className="text-lg text-muted-foreground">Every category. Multiple regulated lenders. One application.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {products.map((p) => (
@@ -329,14 +332,14 @@ function Stats() {
   const stats = [
     { value: "₹2,400Cr+", label: "Disbursed" },
     { value: "4.5L+", label: "Happy customers" },
-    { value: "12+", label: "Partner lenders" },
+    { value: "Multi", label: "Lender network" },
     { value: "60s", label: "Avg. match time" },
   ];
   return (
     <section className="py-16 px-6">
       <div className="max-w-6xl mx-auto bg-gradient-to-br from-black via-zinc-900 to-red-700 rounded-3xl p-10 md:p-14 text-white relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-red-500/20 blur-3xl" />
         <div className="relative grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {stats.map((s) => (
             <div key={s.label}>
@@ -354,16 +357,14 @@ function HowItWorks() {
   const steps = [
     { num: "01", icon: Smartphone, title: "Sign up in seconds", desc: "Just your phone number and a 6-digit OTP. No paperwork." },
     { num: "02", icon: ShieldCheck, title: "One-time KYC", desc: "Aadhaar + PAN verified instantly. Your data stays encrypted." },
-    { num: "03", icon: Sparkles, title: "Get matched", desc: "Our engine ranks 12+ lenders by your profile and approval odds." },
+    { num: "03", icon: Sparkles, title: "Get matched", desc: "Our engine ranks regulated lenders by your profile and approval odds." },
     { num: "04", icon: Zap, title: "Apply & disburse", desc: "Pick the best offer and money lands in your account in 24-48 hours." },
   ];
   return (
     <section id="how" className="py-24 px-6 bg-muted/40">
       <div className="max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <Badge variant="outline" className="mb-4 bg-card border-primary/20 text-primary">
-            How it works
-          </Badge>
+          <Badge variant="outline" className="mb-4 bg-card border-primary/20 text-primary">How it works</Badge>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">From zero to loan in 4 steps</h2>
           <p className="text-lg text-muted-foreground">No agents. No bank visits. No paperwork chases.</p>
         </div>
@@ -391,46 +392,47 @@ function HowItWorks() {
 
 function RateComparison() {
   const rates = [
-    { name: "HDFC Bank", logo: "H", rate: "10.49%", emi: "9,633", color: "bg-rose-500" },
-    { name: "ICICI Bank", logo: "I", rate: "11.25%", emi: "9,792", color: "bg-orange-500" },
-    { name: "Axis Bank", logo: "A", rate: "11.99%", emi: "9,962", color: "bg-purple-500" },
-    { name: "SBI", logo: "S", rate: "10.85%", emi: "9,712", color: "bg-blue-600" },
-    { name: "Kotak Mahindra", logo: "K", rate: "11.50%", emi: "9,847", color: "bg-rose-600" },
-    { name: "Bajaj Finserv", logo: "B", rate: "12.50%", emi: "10,079", color: "bg-blue-700" },
+    { tier: "Tier A", desc: "Salaried • Top employers", rate: "10.49%", emi: "9,633", badge: "Best rate" },
+    { tier: "Tier B", desc: "Salaried • Listed companies", rate: "10.85%", emi: "9,712" },
+    { tier: "Tier C", desc: "Salaried • SME segment", rate: "11.25%", emi: "9,792" },
+    { tier: "Tier D", desc: "Self-employed • Professional", rate: "11.50%", emi: "9,847" },
+    { tier: "Tier E", desc: "Self-employed • Business owner", rate: "11.99%", emi: "9,962" },
+    { tier: "Tier F", desc: "New to credit", rate: "12.50%", emi: "10,079" },
   ];
   return (
     <section id="rates" className="py-24 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <Badge variant="outline" className="mb-4 bg-accent/10 border-accent/20 text-accent">
-            Live rates
-          </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            Compare rates side-by-side
-          </h2>
-          <p className="text-lg text-muted-foreground">Indicative offers for ₹3 Lakh personal loan over 36 months.</p>
+          <Badge variant="outline" className="mb-4 bg-accent/10 border-accent/20 text-accent">Indicative rates</Badge>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">See what you could pay</h2>
+          <p className="text-lg text-muted-foreground">
+            Indicative offers across our regulated partner network for a ₹3 Lakh personal loan over 36 months.
+          </p>
         </div>
         <div className="bg-card rounded-3xl border shadow-sm overflow-hidden">
           <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-muted/50 border-b text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <div className="col-span-5">Lender</div>
+            <div className="col-span-5">Profile</div>
             <div className="col-span-3">Interest rate</div>
             <div className="col-span-2">EMI</div>
             <div className="col-span-2 text-right">Action</div>
           </div>
           {rates.map((r, i) => (
             <div
-              key={r.name}
+              key={r.tier}
               className={`grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-muted/30 transition-colors ${
                 i < rates.length - 1 ? "border-b" : ""
               }`}
             >
               <div className="col-span-5 flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl ${r.color} text-white font-bold flex items-center justify-center text-lg`}>
-                  {r.logo}
+                <div className="w-10 h-10 rounded-xl bg-black text-white font-bold flex items-center justify-center text-sm">
+                  {r.tier.split(" ")[1]}
                 </div>
                 <div>
-                  <div className="font-semibold">{r.name}</div>
-                  {i === 0 && <Badge className="mt-0.5 bg-red-50 text-red-700 border-red-200 text-[10px]">Best rate</Badge>}
+                  <div className="font-semibold">{r.tier}</div>
+                  <div className="text-xs text-muted-foreground">{r.desc}</div>
+                  {r.badge && (
+                    <Badge className="mt-0.5 bg-red-50 text-red-700 border-red-200 text-[10px]">{r.badge}</Badge>
+                  )}
                 </div>
               </div>
               <div className="col-span-3">
@@ -443,12 +445,15 @@ function RateComparison() {
               </div>
               <div className="col-span-2 text-right">
                 <Link href="/login">
-                  <Button size="sm" variant="outline">Apply</Button>
+                  <Button size="sm" variant="outline">Check</Button>
                 </Link>
               </div>
             </div>
           ))}
         </div>
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          Final rates are determined by partner lenders based on your credit profile and underwriting policy.
+        </p>
       </div>
     </section>
   );
@@ -460,7 +465,7 @@ function Testimonials() {
       name: "Priya Sharma",
       role: "Software Engineer, Bengaluru",
       rating: 5,
-      text: "Got ₹5L personal loan in 36 hours. Quikkk found me a 10.5% rate when my bank was offering 13%. Saved over ₹40K in interest.",
+      text: "Got my personal loan disbursed in 36 hours. Quikkk found me a much better rate than I'd been quoted directly — saved over ₹40K in interest.",
     },
     {
       name: "Arjun Mehta",
@@ -472,7 +477,7 @@ function Testimonials() {
       name: "Sneha Reddy",
       role: "Doctor, Hyderabad",
       rating: 5,
-      text: "I love that I can check my CIBIL score for free and track all my applications in one place. Genuine product.",
+      text: "I love that I can check my credit score for free and track all my applications in one place. Genuine product, zero spam calls.",
     },
   ];
   return (
@@ -517,7 +522,7 @@ function Trust() {
   const items = [
     { icon: ShieldCheck, title: "Bank-grade security", desc: "256-bit AES encryption. ISO 27001 certified infrastructure." },
     { icon: Lock, title: "Your data, your control", desc: "We share your details only with lenders you choose. Delete anytime." },
-    { icon: Award, title: "RBI-regulated partners", desc: "Every lender is licensed by RBI. No predatory or unregulated apps." },
+    { icon: Award, title: "RBI-regulated network", desc: "Every lending partner is licensed by RBI. No predatory or unregulated apps." },
     { icon: Percent, title: "No hidden charges", desc: "Quikkk is free to use. We're paid by partner lenders, not you." },
     { icon: Users, title: "4.5L+ Indians trust us", desc: "Disbursed over ₹2,400 Cr in loans across the country." },
     { icon: Clock, title: "24/7 support", desc: "Real humans on chat, WhatsApp, and email. Average reply time: 4 mins." },
@@ -526,9 +531,7 @@ function Trust() {
     <section id="trust" className="py-24 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <Badge variant="outline" className="mb-4 bg-primary/5 border-primary/20 text-primary">
-            Built on trust
-          </Badge>
+          <Badge variant="outline" className="mb-4 bg-primary/5 border-primary/20 text-primary">Built on trust</Badge>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Why people pick Quikkk</h2>
           <p className="text-lg text-muted-foreground">
             We're an aggregator, not a lender. Our incentive is to find <em>you</em> the best deal.
@@ -554,26 +557,30 @@ function CTA() {
   return (
     <section className="py-20 px-6">
       <div className="max-w-5xl mx-auto bg-gradient-to-br from-black via-zinc-900 to-red-700 rounded-[2.5rem] p-12 md:p-16 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/20 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/20 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         <div className="relative text-center max-w-2xl mx-auto space-y-6">
-          <LogoMark size={56} />
+          <div className="flex justify-center">
+            <Logo size={36} variant="light" />
+          </div>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mt-4">
             Ready to lock the best rate?
           </h2>
           <p className="text-lg text-white/80">
-            Sign up in 30 seconds. See your personalised offers from 12+ lenders. Apply only if you love the rate.
+            Sign up in 30 seconds. See your personalised offers from our regulated lender network. Apply only if you love
+            the rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Link href="/login">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90 gap-2 h-14 px-8 text-base font-semibold w-full sm:w-auto">
+              <Button
+                size="lg"
+                className="bg-white text-black hover:bg-white/90 gap-2 h-14 px-8 text-base font-semibold w-full sm:w-auto"
+              >
                 Get my offers <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
           </div>
-          <p className="text-xs text-white/60 pt-3">
-            Free • Soft credit pull • Won't impact your score
-          </p>
+          <p className="text-xs text-white/60 pt-3">Free • Soft credit pull • Won't impact your score</p>
         </div>
       </div>
     </section>
@@ -583,35 +590,79 @@ function CTA() {
 function Footer() {
   return (
     <footer className="border-t bg-card">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid md:grid-cols-4 gap-8 mb-10">
-          <div className="space-y-3">
-            <Logo size={32} />
-            <p className="text-sm text-muted-foreground max-w-xs">
-              India's fastest credit marketplace. Compare loans and cards from 12+ regulated lenders.
+      <div className="max-w-7xl mx-auto px-6 py-14">
+        <div className="grid md:grid-cols-4 gap-10 mb-10">
+          <div className="space-y-4">
+            <Logo size={26} />
+            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+              India's smartest credit marketplace. Compare loans and cards from a regulated lender network.
             </p>
+            <div className="space-y-2 text-sm pt-2">
+              <a href="mailto:info@quikkk.com" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <Mail className="w-4 h-4 text-red-600" /> info@quikkk.com
+              </a>
+              <a href="tel:+918335974309" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <Phone className="w-4 h-4 text-red-600" /> +91 83359 74309
+              </a>
+            </div>
           </div>
-          <FooterCol title="Products" links={["Personal loan", "Home loan", "Auto loan", "Business loan", "Credit cards"]} />
-          <FooterCol title="Company" links={["About", "Careers", "Press", "Blog", "Contact"]} />
-          <FooterCol title="Legal" links={["Privacy", "Terms", "Grievance redressal", "RBI guidelines"]} />
+          <FooterCol
+            title="Products"
+            links={[
+              { label: "Personal loan", href: "/login" },
+              { label: "Home loan", href: "/login" },
+              { label: "Auto loan", href: "/login" },
+              { label: "Business loan", href: "/login" },
+              { label: "Credit cards", href: "/login" },
+            ]}
+          />
+          <FooterCol
+            title="Company"
+            links={[
+              { label: "About us", href: "/about" },
+              { label: "Contact", href: "/about" },
+              { label: "Careers", href: "/about" },
+              { label: "Press", href: "/about" },
+            ]}
+          />
+          <FooterCol
+            title="Legal"
+            links={[
+              { label: "Terms & conditions", href: "/terms" },
+              { label: "Privacy policy", href: "/terms" },
+              { label: "Grievance redressal", href: "/terms" },
+              { label: "Trademark notice", href: "/terms" },
+            ]}
+          />
         </div>
-        <div className="border-t pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} Quikkk Technologies Pvt Ltd. All rights reserved.</span>
-          <span>Quikkk is a loan aggregator. Loans are sanctioned and disbursed by partner banks/NBFCs.</span>
+        <div className="border-t pt-6 space-y-2 text-xs text-muted-foreground">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+            <span>© {new Date().getFullYear()} Mekyek Global Services Pvt Ltd. All rights reserved.</span>
+            <span>
+              "Quikkk" is a registered trademark of Mekyek Global Services Pvt Ltd.
+            </span>
+          </div>
+          <p className="leading-relaxed">
+            Quikkk is a digital loan & credit card aggregator. Loans and credit facilities are sanctioned and disbursed
+            solely by our regulated lending partners as per their internal credit policies. Mekyek Global Services Pvt
+            Ltd does not lend, accept deposits or make any guarantee of loan approval.
+          </p>
         </div>
       </div>
     </footer>
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: string[] }) {
+function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
       <h4 className="font-semibold text-sm mb-4">{title}</h4>
       <ul className="space-y-2.5">
         {links.map((l) => (
-          <li key={l}>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{l}</a>
+          <li key={l.label}>
+            <Link href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              {l.label}
+            </Link>
           </li>
         ))}
       </ul>

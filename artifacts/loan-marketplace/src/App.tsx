@@ -19,6 +19,8 @@ import CreditCards from "@/pages/credit-cards";
 import EmiCalculator from "@/pages/emi-calculator";
 import Notifications from "@/pages/notifications";
 import Profile from "@/pages/profile";
+import About from "@/pages/about";
+import Terms from "@/pages/terms";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -33,6 +35,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/about" component={About} />
+      <Route path="/terms" component={Terms} />
       <Route path="/login" component={Login} />
       <Route path="/kyc"><P><Kyc /></P></Route>
       <Route path="/dashboard"><P><Dashboard /></P></Route>
