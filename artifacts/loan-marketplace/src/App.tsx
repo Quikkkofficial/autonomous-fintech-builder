@@ -8,6 +8,8 @@ import { Layout } from "@/components/layout";
 
 import Home from "@/pages/home";
 import Login from "@/pages/login";
+import AdminLogin from "@/pages/admin/login";
+import PartnerLogin from "@/pages/partner/login";
 import Dashboard from "@/pages/dashboard";
 import Kyc from "@/pages/kyc";
 import Loans from "@/pages/loans";
@@ -64,6 +66,8 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/terms" component={Terms} />
       <Route path="/login" component={Login} />
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/partner/login" component={PartnerLogin} />
       <Route path="/kyc"><P><Kyc /></P></Route>
       <Route path="/dashboard"><P><Dashboard /></P></Route>
       <Route path="/loans"><P><Loans /></P></Route>

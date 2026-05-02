@@ -79,6 +79,12 @@ function Nav() {
           <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
         </nav>
         <div className="flex items-center gap-2">
+          <Link href="/partner/login">
+            <Button variant="ghost" className="hidden sm:inline-flex">Partner login</Button>
+          </Link>
+          <Link href="/admin/login">
+            <Button variant="ghost" className="hidden sm:inline-flex text-muted-foreground/70">Admin</Button>
+          </Link>
           <Link href="/login">
             <Button variant="ghost" className="hidden sm:inline-flex">Sign in</Button>
           </Link>
@@ -571,22 +577,22 @@ function CTA() {
             the rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Link href="/partner">
+            <Link href="/partner/login">
               <Button
                 size="lg"
                 variant="outline"
                 className="bg-white text-black hover:bg-white/90 gap-2 h-14 px-8 text-base font-semibold w-full sm:w-auto"
               >
-                Partner access <ArrowRight className="w-5 h-5" />
+                Partner portal <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <Link href="/collection">
+            <Link href="/partner/login">
               <Button
                 size="lg"
                 variant="outline"
                 className="bg-white text-black hover:bg-white/90 gap-2 h-14 px-8 text-base font-semibold w-full sm:w-auto"
               >
-                Collection access <ArrowRight className="w-5 h-5" />
+                Collections portal <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
             <Link href="/login">
