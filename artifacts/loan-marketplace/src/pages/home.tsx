@@ -82,12 +82,6 @@ function Nav() {
           <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/partner/login">
-            <Button variant="ghost" className="hidden sm:inline-flex">Partner login</Button>
-          </Link>
-          <Link href="/admin/login">
-            <Button variant="ghost" className="hidden sm:inline-flex text-muted-foreground/70">Admin</Button>
-          </Link>
           <Link href="/login">
             <Button variant="ghost" className="hidden sm:inline-flex">Sign in</Button>
           </Link>
