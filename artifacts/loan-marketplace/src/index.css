@@ -154,3 +154,10 @@
     background-position: 0 0, 14px 14px;
   }
 }
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .h-13 { height: 3.25rem; }
+}
