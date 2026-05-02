@@ -571,6 +571,24 @@ function CTA() {
             the rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <Link href="/partner">
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-white text-black hover:bg-white/90 gap-2 h-14 px-8 text-base font-semibold w-full sm:w-auto"
+              >
+                Partner access <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
+            <Link href="/collection">
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-white text-black hover:bg-white/90 gap-2 h-14 px-8 text-base font-semibold w-full sm:w-auto"
+              >
+                Collection access <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
             <Link href="/login">
               <Button
                 size="lg"

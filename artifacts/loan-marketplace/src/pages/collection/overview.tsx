@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { CollectionLayout } from "@/components/collection-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle, IndianRupee, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertTriangle, IndianRupee, CheckCircle2, PhoneCall, Mail, MessageSquare, KeyRound, Globe2, ShieldCheck } from "lucide-react";
 import { formatINR } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -60,6 +60,26 @@ export default function CollectionOverview() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card className="lg:col-span-2">
+            <CardHeader><CardTitle>Omni-channel recovery stack</CardTitle></CardHeader>
+            <CardContent className="grid sm:grid-cols-2 gap-3">
+              <Feature title="Voice + dialer" desc="Call tasks, retry rules, and call disposition tracking." icon={PhoneCall} />
+              <Feature title="SMS / WhatsApp" desc="Automated reminders with promise-to-pay capture." icon={MessageSquare} />
+              <Feature title="Email nudges" desc="Send payment links, statements, and escalation notices." icon={Mail} />
+              <Feature title="Web portal" desc="Collector dashboard with live queues and SLA markers." icon={Globe2} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>API keys</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <SecretRow label="Collection portal" value="pk_qcp_live_••••••••" />
+              <SecretRow label="Omni-channel webhook" value="wh_qcp_live_••••••••" />
+              <p className="text-xs text-muted-foreground">Connect dialers, SMS providers, and CRMs using secure API credentials.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </CollectionLayout>
   );
@@ -73,5 +93,28 @@ function Kpi({ icon: Icon, label, value }: { icon: any; label: string; value: Re
         <div className="text-2xl font-bold mt-2">{value}</div>
       </CardContent>
     </Card>
+  );
+}
+
+function Feature({ title, desc, icon: Icon }: { title: string; desc: string; icon: React.ComponentType<{ className?: string }> }) {
+  return (
+    <div className="rounded-xl border p-4 bg-muted/20">
+      <div className="flex items-start gap-3">
+        <div className="rounded-lg bg-primary/10 p-2"><Icon className="h-4 w-4 text-primary" /></div>
+        <div className="space-y-1">
+          <div className="font-medium">{title}</div>
+          <div className="text-xs text-muted-foreground leading-relaxed">{desc}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SecretRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 font-mono text-sm">{value}</div>
+    </div>
   );
 }

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, PhoneCall, MessageSquare, Mail, Globe2, Clock3, Route } from "lucide-react";
 import { formatINR } from "@/lib/format";
 
 type Case = {
@@ -44,6 +44,13 @@ export default function CollectionCases() {
           <Button variant={filter === "unassigned" ? "default" : "outline"} size="sm" onClick={() => setFilter("unassigned")}>Unassigned</Button>
           <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>All overdue</Button>
         </div>
+        <Card>
+          <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="rounded-xl border p-4 bg-muted/20"><div className="font-medium">Omni-channel queue</div><p className="text-xs text-muted-foreground mt-1">One view for calls, SMS, email, WhatsApp, and visits.</p></div>
+            <div className="rounded-xl border p-4 bg-muted/20"><div className="font-medium">Trackable journeys</div><p className="text-xs text-muted-foreground mt-1">Every follow-up gets a channel, outcome, and promise-to-pay.</p></div>
+            <div className="rounded-xl border p-4 bg-muted/20"><div className="font-medium">SLA / route planning</div><p className="text-xs text-muted-foreground mt-1">Prioritize cases by DPD and next-best action.</p></div>
+          </CardContent>
+        </Card>
         <Card><CardContent className="pt-6">
           {cases.isLoading && <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>}
           <div className="overflow-x-auto">
