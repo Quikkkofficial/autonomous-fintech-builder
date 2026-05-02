@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
-const LOAN_TYPES = ["personal", "home", "auto", "business", "education"];
+const LOAN_TYPES = ["personal", "home", "auto", "business", "education", "gold", "fd", "mutual_fund", "insurance"];
 
 export default function NewLead() {
   const { toast } = useToast();

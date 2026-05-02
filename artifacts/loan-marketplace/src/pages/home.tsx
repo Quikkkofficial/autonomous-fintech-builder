@@ -26,6 +26,9 @@ import {
   ChevronRight,
   Phone,
   Mail,
+  Gem,
+  PiggyBank,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -298,6 +301,10 @@ function ProductGrid() {
     { icon: Car, name: "Auto Loan", desc: "₹1L – ₹50L", rate: "from 9.25% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
     { icon: Briefcase, name: "Business Loan", desc: "₹1L – ₹2Cr", rate: "from 14.50% p.a.", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
     { icon: GraduationCap, name: "Education Loan", desc: "₹50K – ₹1Cr", rate: "from 9.95% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
+    { icon: Gem, name: "Gold Loan", desc: "₹10K – ₹50L", rate: "from 7.00% p.a.", color: "from-white to-yellow-50", iconBg: "bg-yellow-500 text-white" },
+    { icon: PiggyBank, name: "FD Loan", desc: "Up to 90% of FD", rate: "~1–2% over FD rate", color: "from-white to-blue-50", iconBg: "bg-blue-600 text-white" },
+    { icon: TrendingUp, name: "Mutual Fund Loan", desc: "₹50K – ₹5Cr", rate: "from 9.00% p.a.", color: "from-white to-emerald-50", iconBg: "bg-emerald-600 text-white" },
+    { icon: Shield, name: "Insurance Loan", desc: "₹10K – ₹50L", rate: "from 9.00% p.a.", color: "from-white to-purple-50", iconBg: "bg-purple-600 text-white" },
     { icon: CreditCard, name: "Credit Cards", desc: "Premium card range", rate: "Lifetime free options", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
   ];
   return (

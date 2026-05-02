@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Landmark, Home, Car, Briefcase, GraduationCap, ArrowRight } from "lucide-react";
+import { Landmark, Home, Car, Briefcase, GraduationCap, ArrowRight, Gem, PiggyBank, TrendingUp, Shield } from "lucide-react";
 import { formatINR } from "@/lib/format";
 
-type LoanType = "personal" | "home" | "auto" | "business" | "education";
+type LoanType = "personal" | "home" | "auto" | "business" | "education" | "gold" | "fd" | "mutual_fund" | "insurance";
 
 const TYPES: { v: LoanType; label: string; icon: React.ElementType; min: number; max: number; desc: string }[] = [
   { v: "personal", label: "Personal Loan", icon: Landmark, min: 25000, max: 4000000, desc: "Quick funds for any need" },
@@ -17,6 +17,10 @@ const TYPES: { v: LoanType; label: string; icon: React.ElementType; min: number;
   { v: "auto", label: "Auto Loan", icon: Car, min: 100000, max: 5000000, desc: "Finance your dream car" },
   { v: "business", label: "Business Loan", icon: Briefcase, min: 100000, max: 20000000, desc: "Grow your business" },
   { v: "education", label: "Education Loan", icon: GraduationCap, min: 50000, max: 10000000, desc: "Invest in your future" },
+  { v: "gold", label: "Gold Loan", icon: Gem, min: 10000, max: 5000000, desc: "Instant loan against your gold" },
+  { v: "fd", label: "FD Loan", icon: PiggyBank, min: 10000, max: 100000000, desc: "Loan against fixed deposit" },
+  { v: "mutual_fund", label: "Mutual Fund Loan", icon: TrendingUp, min: 50000, max: 50000000, desc: "Pledge your MF units for credit" },
+  { v: "insurance", label: "Insurance Loan", icon: Shield, min: 10000, max: 5000000, desc: "Borrow against your policy value" },
 ];
 
 export default function Loans() {

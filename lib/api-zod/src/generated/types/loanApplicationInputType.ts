@@ -15,4 +15,8 @@ export const LoanApplicationInputType = {
   auto: "auto",
   business: "business",
   education: "education",
+  gold: "gold",
+  fd: "fd",
+  mutual_fund: "mutual_fund",
+  insurance: "insurance",
 } as const;

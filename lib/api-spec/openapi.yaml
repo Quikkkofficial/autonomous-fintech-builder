@@ -142,7 +142,7 @@ paths:
           name: type
           schema:
             type: string
-            enum: [personal, home, auto, business, education]
+            enum: [personal, home, auto, business, education, gold, fd, mutual_fund, insurance]
       responses:
         "200":
           description: Lenders
@@ -504,7 +504,7 @@ components:
       properties:
         type:
           type: string
-          enum: [personal, home, auto, business, education]
+          enum: [personal, home, auto, business, education, gold, fd, mutual_fund, insurance]
         amount:
           type: number
         tenureMonths:
@@ -547,7 +547,7 @@ components:
           type: string
         type:
           type: string
-          enum: [personal, home, auto, business, education]
+          enum: [personal, home, auto, business, education, gold, fd, mutual_fund, insurance]
         amount:
           type: number
         tenureMonths:
