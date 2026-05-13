@@ -6,6 +6,7 @@ import {
   loanApplicationsTable,
   partnerPayoutsTable,
   collectionFollowupsTable,
+  lenderIntegrationsTable,
 } from "@workspace/db";
 import { sql, eq } from "drizzle-orm";
 import { logger } from "./logger";
@@ -460,20 +461,39 @@ export async function seedIfEmpty(): Promise<void> {
   const count = Number(lenderCount.rows[0]?.count ?? "0");
   if (count > 0) {
     logger.info({ lenders: count }, "Lenders already seeded");
-    return;
+  } else {
+    logger.info("Seeding lenders and credit cards");
+    await db.insert(lendersTable).values(
+      LENDERS.map((l) => ({
+        ...l,
+        type: l.type,
+        supportedTypes: [...l.supportedTypes],
+      })),
+    );
+    await db.insert(creditCardsTable).values(
+      CARDS.map((c) => ({ ...c, perks: [...c.perks] })),
+    );
+    logger.info({ lenders: LENDERS.length, cards: CARDS.length }, "Seed complete");
   }
-  logger.info("Seeding lenders and credit cards");
-  await db.insert(lendersTable).values(
-    LENDERS.map((l) => ({
-      ...l,
-      type: l.type,
-      supportedTypes: [...l.supportedTypes],
-    })),
+
+  // Seed Urban Money integration if not present
+  const umCount = await db.execute<{ count: string }>(
+    sql`SELECT COUNT(*)::text AS count FROM lender_integrations WHERE slug = 'urbanmoney'`,
   );
-  await db.insert(creditCardsTable).values(
-    CARDS.map((c) => ({ ...c, perks: [...c.perks] })),
-  );
-  logger.info({ lenders: LENDERS.length, cards: CARDS.length }, "Seed complete");
+  if (Number(umCount.rows[0]?.count ?? "0") === 0) {
+    await db.insert(lenderIntegrationsTable).values({
+      id: "INTG-urbanmoney",
+      name: "Urban Money",
+      slug: "urbanmoney",
+      apiType: "urbanmoney",
+      apiEndpoint: "https://tpapi.urbanmoney.com/tpapi/v1/lead/create",
+      clientId: "2aee44bcb4630f5b",
+      status: "pending_whitelist",
+      supportedTypes: ["personal", "home", "auto", "business", "education", "gold", "fd"],
+      notes: "IP whitelist required — server IP 34.58.96.82 must be approved by Urban Money UAT team before going live.",
+    });
+    logger.info("Seeded Urban Money lender integration");
+  }
 }
 
 async function ensureUser(phone: string, name: string, role: string, partnerCode?: string): Promise<{ id: number; phone: string; name: string | null; role: string }> {

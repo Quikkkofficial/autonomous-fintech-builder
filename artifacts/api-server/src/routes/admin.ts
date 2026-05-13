@@ -8,8 +8,10 @@ import {
   notificationsTable,
   partnerPayoutsTable,
   collectionFollowupsTable,
+  lenderIntegrationsTable,
+  leadDispatchesTable,
 } from "@workspace/db";
-import { eq, desc, sql, and, gte } from "drizzle-orm";
+import { eq, desc, sql, and, gte, inArray } from "drizzle-orm";
 import { requireRole } from "../lib/session";
 import { genId } from "../lib/utils";
 
@@ -199,6 +201,130 @@ router.get("/admin/timeseries", async (_req, res) => {
 router.get("/admin/followups", async (_req, res) => {
   const rows = await db.select().from(collectionFollowupsTable).orderBy(desc(collectionFollowupsTable.createdAt)).limit(100);
   res.json(rows);
+});
+
+// ── Lender Integrations ──────────────────────────────────────────────────────
+
+router.get("/admin/integrations", async (_req, res) => {
+  const rows = await db.select().from(lenderIntegrationsTable).orderBy(lenderIntegrationsTable.createdAt);
+  res.json(rows.map((r) => ({ ...r, clientSecret: undefined })));
+});
+
+router.post("/admin/integrations", async (req, res) => {
+  const { name, slug, apiType, apiEndpoint, clientId, clientSecret, notes, supportedTypes } = req.body ?? {};
+  if (!name || !slug) return res.status(400).json({ error: "name and slug are required" });
+  const existing = await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.slug, slug)).limit(1);
+  if (existing.length > 0) return res.status(409).json({ error: "slug_already_exists" });
+  const row = await db.insert(lenderIntegrationsTable).values({
+    id: genId("INTG"),
+    name,
+    slug,
+    apiType: apiType ?? "custom",
+    apiEndpoint: apiEndpoint || null,
+    clientId: clientId || null,
+    clientSecret: clientSecret || null,
+    status: "inactive",
+    supportedTypes: Array.isArray(supportedTypes) ? supportedTypes : [],
+    notes: notes || null,
+  }).returning();
+  res.json({ ...row[0], clientSecret: undefined });
+});
+
+router.patch("/admin/integrations/:id", async (req, res) => {
+  const id = req.params["id"];
+  const allowed = ["name", "status", "apiEndpoint", "clientId", "clientSecret", "notes", "supportedTypes"];
+  const update: Record<string, unknown> = {};
+  for (const k of allowed) if (req.body[k] !== undefined) update[k] = req.body[k];
+  const row = await db.update(lenderIntegrationsTable).set(update).where(eq(lenderIntegrationsTable.id, id!)).returning();
+  if (!row[0]) return res.status(404).json({ error: "not_found" });
+  res.json({ ...row[0], clientSecret: undefined });
+});
+
+router.delete("/admin/integrations/:id", async (req, res) => {
+  const id = req.params["id"];
+  const intg = (await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.id, id!)).limit(1))[0];
+  if (!intg) return res.status(404).json({ error: "not_found" });
+  if (intg.slug === "urbanmoney") return res.status(400).json({ error: "cannot_delete_system_integration" });
+  await db.delete(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.id, id!));
+  res.json({ ok: true });
+});
+
+router.post("/admin/integrations/:id/push-pending", async (req, res) => {
+  const id = req.params["id"];
+  const intg = (await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.id, id!)).limit(1))[0];
+  if (!intg) return res.status(404).json({ error: "not_found" });
+  if (intg.status !== "active") return res.status(400).json({ error: "integration_not_active" });
+  // Get leads that haven't been dispatched to this integration yet
+  const dispatched = await db.select({ leadId: leadDispatchesTable.leadId }).from(leadDispatchesTable).where(eq(leadDispatchesTable.integrationId, id!));
+  const dispatchedIds = dispatched.map((d) => d.leadId);
+  const query = dispatchedIds.length > 0
+    ? db.select().from(loanApplicationsTable).where(sql`${loanApplicationsTable.id} not in (${sql.join(dispatchedIds.map((i) => sql`${i}`), sql`, `)})`)
+    : db.select().from(loanApplicationsTable);
+  const leads = await query.limit(50);
+  let pushed = 0;
+  for (const lead of leads) {
+    await db.insert(leadDispatchesTable).values({
+      leadId: lead.id,
+      integrationId: intg.id,
+      integrationName: intg.name,
+      status: "sent",
+      responseMessage: "Dispatched via admin bulk push",
+    });
+    pushed++;
+  }
+  if (pushed > 0) {
+    await db.update(lenderIntegrationsTable).set({ totalSent: sql`${lenderIntegrationsTable.totalSent} + ${pushed}` }).where(eq(lenderIntegrationsTable.id, id!));
+  }
+  res.json({ ok: true, pushed });
+});
+
+// ── Lead Dispatch Log ────────────────────────────────────────────────────────
+
+router.get("/admin/dispatches", async (_req, res) => {
+  const dispatches = await db.select().from(leadDispatchesTable).orderBy(desc(leadDispatchesTable.dispatchedAt)).limit(500);
+  const leadIds = [...new Set(dispatches.map((d) => d.leadId))];
+  let leads: Array<{
+    id: string; customerName: string | null; customerPhone: string | null;
+    type: string; amount: string; lenderName: string; referredByPartnerId: number | null;
+  }> = [];
+  if (leadIds.length > 0) {
+    leads = (await db.select({
+      id: loanApplicationsTable.id,
+      customerName: loanApplicationsTable.customerName,
+      customerPhone: loanApplicationsTable.customerPhone,
+      type: loanApplicationsTable.type,
+      amount: loanApplicationsTable.amount,
+      lenderName: loanApplicationsTable.lenderName,
+      referredByPartnerId: loanApplicationsTable.referredByPartnerId,
+    }).from(loanApplicationsTable).where(inArray(loanApplicationsTable.id, leadIds))).map((l) => ({
+      ...l,
+      amount: String(l.amount),
+    }));
+  }
+  const leadMap = Object.fromEntries(leads.map((l) => [l.id, l]));
+  res.json(dispatches.map((d) => ({ ...d, lead: leadMap[d.leadId] ?? null })));
+});
+
+router.post("/admin/dispatches/repush/:leadId", async (req, res) => {
+  const { leadId } = req.params;
+  const lead = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, leadId!)).limit(1))[0];
+  if (!lead) return res.status(404).json({ error: "lead_not_found" });
+  const activeIntgs = await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.status, "active"));
+  if (activeIntgs.length === 0) return res.status(400).json({ error: "no_active_integrations" });
+  const now = new Date();
+  for (const intg of activeIntgs) {
+    await db.insert(leadDispatchesTable).values({
+      leadId: lead.id,
+      integrationId: intg.id,
+      integrationName: intg.name,
+      status: "sent",
+      responseMessage: "Admin re-dispatch",
+      dispatchedAt: now,
+      updatedAt: now,
+    });
+    await db.update(lenderIntegrationsTable).set({ totalSent: sql`${lenderIntegrationsTable.totalSent} + 1` }).where(eq(lenderIntegrationsTable.id, intg.id));
+  }
+  res.json({ ok: true, dispatched: activeIntgs.length });
 });
 
 export default router;

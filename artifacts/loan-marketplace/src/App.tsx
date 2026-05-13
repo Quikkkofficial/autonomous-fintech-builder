@@ -32,6 +32,8 @@ import AdminLenders from "@/pages/admin/lenders";
 import AdminPayouts from "@/pages/admin/payouts";
 import AdminCollections from "@/pages/admin/collections";
 import AdminApiKeys from "@/pages/admin/api-keys";
+import AdminBankIntegrations from "@/pages/admin/bank-integrations";
+import AdminDispatchLog from "@/pages/admin/dispatch-log";
 
 import PartnerOverview from "@/pages/partner/overview";
 import PartnerLeads from "@/pages/partner/leads";
@@ -92,6 +94,8 @@ function Router() {
       <Route path="/admin/payouts"><AP><AdminPayouts /></AP></Route>
       <Route path="/admin/collections"><AP><AdminCollections /></AP></Route>
       <Route path="/admin/api-keys"><AP><AdminApiKeys /></AP></Route>
+      <Route path="/admin/bank-integrations"><AP><AdminBankIntegrations /></AP></Route>
+      <Route path="/admin/dispatch-log"><AP><AdminDispatchLog /></AP></Route>
 
       <Route path="/partner"><PP><PartnerOverview /></PP></Route>
       <Route path="/partner/leads"><PP><PartnerLeads /></PP></Route>

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, loanApplicationsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, loanApplicationsTable, lenderIntegrationsTable, leadDispatchesTable } from "@workspace/db";
+import { eq, sql } from "drizzle-orm";
 import { requireRole } from "../lib/session";
 import { generateToken, getStatus, pushLead, LOAN_TYPE_TO_PRODUCT_ID } from "../lib/urbanmoney";
 
@@ -34,13 +34,41 @@ router.post("/um/push/:leadId", requireRole("admin"), async (req, res) => {
     loanAmount: lead.amount ? Number(lead.amount) : undefined,
   });
 
+  const now = new Date();
   await db.update(loanApplicationsTable)
     .set({
       umLeadId: result.umLeadId ?? undefined,
       umStatus: result.success ? "pushed" : "failed",
-      umPushedAt: new Date(),
+      umPushedAt: now,
     })
-    .where(eq(loanApplicationsTable.id, leadId));
+    .where(eq(loanApplicationsTable.id, leadId!));
+
+  // Record in lead_dispatches — upsert by checking existing record
+  const umIntg = (await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.slug, "urbanmoney")).limit(1))[0];
+  if (umIntg) {
+    const dispatchStatus = result.success ? "accepted" : "error";
+    await db.insert(leadDispatchesTable).values({
+      leadId: leadId!,
+      integrationId: umIntg.id,
+      integrationName: umIntg.name,
+      status: dispatchStatus,
+      externalId: result.umLeadId ?? null,
+      responseMessage: result.error ?? (result.success ? "Lead accepted by Urban Money" : "Push failed"),
+      dispatchedAt: now,
+      updatedAt: now,
+    });
+    if (result.success) {
+      await db.update(lenderIntegrationsTable).set({
+        totalSent: sql`${lenderIntegrationsTable.totalSent} + 1`,
+        totalAccepted: sql`${lenderIntegrationsTable.totalAccepted} + 1`,
+      }).where(eq(lenderIntegrationsTable.id, umIntg.id));
+    } else {
+      await db.update(lenderIntegrationsTable).set({
+        totalSent: sql`${lenderIntegrationsTable.totalSent} + 1`,
+        totalRejected: sql`${lenderIntegrationsTable.totalRejected} + 1`,
+      }).where(eq(lenderIntegrationsTable.id, umIntg.id));
+    }
+  }
 
   res.json({ ok: result.success, ...result });
 });

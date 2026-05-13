@@ -153,6 +153,35 @@ export const collectionFollowupsTable = pgTable("collection_followups", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const lenderIntegrationsTable = pgTable("lender_integrations", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 50 }).notNull().unique(),
+  apiType: varchar("api_type", { length: 30 }).notNull().default("custom"),
+  apiEndpoint: text("api_endpoint"),
+  clientId: varchar("client_id", { length: 200 }),
+  clientSecret: varchar("client_secret", { length: 500 }),
+  status: varchar("status", { length: 20 }).notNull().default("inactive"),
+  supportedTypes: jsonb("supported_types").$type<string[]>().notNull().default([]),
+  notes: text("notes"),
+  totalSent: integer("total_sent").notNull().default(0),
+  totalAccepted: integer("total_accepted").notNull().default(0),
+  totalRejected: integer("total_rejected").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const leadDispatchesTable = pgTable("lead_dispatches", {
+  id: serial("id").primaryKey(),
+  leadId: varchar("lead_id", { length: 50 }).notNull(),
+  integrationId: varchar("integration_id", { length: 50 }).notNull(),
+  integrationName: varchar("integration_name", { length: 200 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  externalId: varchar("external_id", { length: 200 }),
+  responseMessage: text("response_message"),
+  dispatchedAt: timestamp("dispatched_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const partnerPayoutsTable = pgTable("partner_payouts", {
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
