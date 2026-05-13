@@ -13,6 +13,7 @@ import toolsRouter from "./tools";
 import adminRouter from "./admin";
 import partnerRouter from "./partner";
 import collectionRouter from "./collection";
+import urbanMoneyRouter from "./urbanmoney";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(toolsRouter);
 router.use(adminRouter);
 router.use(partnerRouter);
 router.use(collectionRouter);
+router.use(urbanMoneyRouter);
 
 export default router;

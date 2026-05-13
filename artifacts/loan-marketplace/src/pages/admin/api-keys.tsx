@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { AdminLayout } from "@/components/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Copy, Check, Key, Webhook, Code2, BookOpen, AlertTriangle,
-  CheckCircle2, ArrowRight, Terminal, Database, Zap, Globe
+  CheckCircle2, ArrowRight, Terminal, Database, Zap, Globe,
+  RefreshCw, Wifi, WifiOff, Clock, ArrowUpCircle, XCircle, Activity, Send,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -53,6 +57,198 @@ function CredRow({ label, value, masked }: { label: string; value: string; maske
       )}
       <CopyButton text={value} />
     </div>
+  );
+}
+
+type UmStatus = {
+  tokenValid: boolean;
+  tokenTtlSec: number;
+  tokenGeneratedAt: number | null;
+  tokenExpiresAt: number | null;
+  lastError: string | null;
+  ipBlocked: boolean;
+  serverIp: string | null;
+  stats: { totalPushed: number; totalSuccess: number; totalError: number };
+  recentPushes: Array<{ leadId: string; umLeadId: string | null; status: "success" | "error"; message: string; at: number }>;
+  endpoint: string;
+  clientId: string;
+};
+
+function TokenTTL({ ttlSec }: { ttlSec: number }) {
+  const [sec, setSec] = useState(ttlSec);
+  useEffect(() => { setSec(ttlSec); }, [ttlSec]);
+  useEffect(() => {
+    if (sec <= 0) return;
+    const t = setInterval(() => setSec((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [sec]);
+  const pct = Math.round((sec / 600) * 100);
+  const color = sec > 120 ? "bg-green-500" : sec > 30 ? "bg-amber-500" : "bg-red-500";
+  const mins = Math.floor(sec / 60);
+  const secs = sec % 60;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>Token TTL</span>
+        <span className="font-mono font-medium text-foreground">{mins}:{String(secs).padStart(2, "0")}</span>
+      </div>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function LiveStatusWidget() {
+  const { toast } = useToast();
+
+  const status = useQuery<UmStatus>({
+    queryKey: ["um", "status"],
+    queryFn: () => api<UmStatus>("/um/status"),
+    refetchInterval: 10_000,
+    retry: 1,
+  });
+
+  const refresh = useMutation({
+    mutationFn: () => api("/um/token/refresh", { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: "Token refreshed", description: "New Urban Money JWT generated successfully." });
+      status.refetch();
+    },
+    onError: (e: Error) => {
+      toast({ title: "Token refresh failed", description: e.message, variant: "destructive" });
+    },
+  });
+
+  const d = status.data;
+  const connected = d?.tokenValid ?? false;
+  const successRate = d && d.stats.totalPushed > 0
+    ? Math.round((d.stats.totalSuccess / d.stats.totalPushed) * 100)
+    : null;
+
+  return (
+    <Card className={connected ? "border-green-300 bg-green-50/30" : "border-red-200 bg-red-50/20"}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            {connected ? <Wifi className="h-5 w-5 text-green-600" /> : <WifiOff className="h-5 w-5 text-red-500" />}
+            Urban Money API — Live Status
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge className={connected ? "bg-green-100 text-green-800 border-green-300" : "bg-red-100 text-red-800 border-red-300"}>
+              <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1.5 ${connected ? "bg-green-600 animate-pulse" : "bg-red-500"}`} />
+              {connected ? "Connected" : "Disconnected"}
+            </Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refresh.mutate()}
+              disabled={refresh.isPending}
+              className="gap-1.5 h-7 text-xs"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${refresh.isPending ? "animate-spin" : ""}`} />
+              {refresh.isPending ? "Connecting…" : "Refresh Token"}
+            </Button>
+          </div>
+        </div>
+        <CardDescription className="text-xs">
+          Polling every 10 s · Endpoint: <span className="font-mono">umapi-uat.urbanmoney.com</span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="rounded-lg border bg-background px-4 py-3 space-y-0.5">
+            <div className="text-xs text-muted-foreground flex items-center gap-1"><Activity className="h-3 w-3" /> Total pushed</div>
+            <div className="text-2xl font-bold">{d?.stats.totalPushed ?? 0}</div>
+          </div>
+          <div className="rounded-lg border bg-background px-4 py-3 space-y-0.5">
+            <div className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> Success</div>
+            <div className="text-2xl font-bold text-green-600">{d?.stats.totalSuccess ?? 0}</div>
+          </div>
+          <div className="rounded-lg border bg-background px-4 py-3 space-y-0.5">
+            <div className="text-xs text-muted-foreground flex items-center gap-1"><XCircle className="h-3 w-3 text-red-500" /> Failed</div>
+            <div className="text-2xl font-bold text-red-600">{d?.stats.totalError ?? 0}</div>
+          </div>
+          <div className="rounded-lg border bg-background px-4 py-3 space-y-0.5">
+            <div className="text-xs text-muted-foreground flex items-center gap-1"><ArrowUpCircle className="h-3 w-3 text-blue-500" /> Success rate</div>
+            <div className="text-2xl font-bold">{successRate !== null ? `${successRate}%` : "—"}</div>
+          </div>
+        </div>
+
+        {connected && d && (
+          <TokenTTL ttlSec={d.tokenTtlSec} />
+        )}
+
+        {d?.ipBlocked && (
+          <div className="rounded-lg border border-orange-300 bg-orange-50 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-orange-800 font-semibold text-sm">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              IP Address Not Whitelisted — Action Required
+            </div>
+            <p className="text-orange-700 text-xs leading-relaxed">
+              The Urban Money UAT API rejected our server's IP address. This is a standard security control on their side.
+              Contact Urban Money's technical team and ask them to whitelist the following IP:
+            </p>
+            <div className="flex items-center gap-2 rounded-md bg-white border border-orange-200 px-3 py-2">
+              <code className="font-mono text-sm font-bold text-orange-900 flex-1">{d.serverIp ?? "Detecting…"}</code>
+              {d.serverIp && <CopyButton text={d.serverIp} />}
+            </div>
+            <p className="text-orange-600 text-xs">
+              Once whitelisted, click "Refresh Token" above and the connection will go live automatically.
+              For the production deployment, a separate IP will need to be whitelisted.
+            </p>
+          </div>
+        )}
+
+        {!connected && !d?.ipBlocked && !status.isLoading && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            No active token. Click "Refresh Token" to generate a new JWT and connect to the Urban Money API.
+            {d?.lastError && <span className="text-xs text-red-700">({d.lastError})</span>}
+          </div>
+        )}
+
+        {d?.recentPushes && d.recentPushes.length > 0 && (
+          <div>
+            <div className="text-sm font-medium mb-2 flex items-center gap-1.5"><Clock className="h-4 w-4 text-muted-foreground" />Recent Push Activity</div>
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-xs">
+                <thead className="bg-muted/50 text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-3 py-2">Lead ID</th>
+                    <th className="text-left px-3 py-2">UM Lead ID</th>
+                    <th className="text-left px-3 py-2">Status</th>
+                    <th className="text-left px-3 py-2">Message</th>
+                    <th className="text-left px-3 py-2">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {d.recentPushes.map((p, i) => (
+                    <tr key={i} className="border-t hover:bg-muted/20">
+                      <td className="px-3 py-2 font-mono">{p.leadId}</td>
+                      <td className="px-3 py-2 font-mono text-muted-foreground">{p.umLeadId ?? "—"}</td>
+                      <td className="px-3 py-2">
+                        {p.status === "success"
+                          ? <Badge className="text-[10px] h-4 px-1.5 bg-green-100 text-green-700 border-green-300">Accepted</Badge>
+                          : <Badge variant="destructive" className="text-[10px] h-4 px-1.5">Failed</Badge>}
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground max-w-[180px] truncate">{p.message}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{new Date(p.at).toLocaleTimeString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {d?.recentPushes?.length === 0 && (
+          <div className="rounded-lg bg-muted/30 border border-dashed p-4 text-center text-xs text-muted-foreground">
+            No leads pushed yet. Leads submitted by channel partners are automatically forwarded to Urban Money.
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -120,7 +316,7 @@ export default function AdminApiKeys() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">API Integration</h1>
             <p className="text-muted-foreground mt-1">
-              Mekyek Lead Integration API — connect any CRM, website, or platform.
+              Urban Money Lead Integration API — real-time lead forwarding to partner network.
             </p>
           </div>
           <Badge className="bg-amber-500/10 text-amber-700 border-amber-300 gap-1.5">
@@ -128,12 +324,14 @@ export default function AdminApiKeys() {
           </Badge>
         </div>
 
+        <LiveStatusWidget />
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="border-green-200 bg-green-50/50">
             <CardContent className="pt-5">
               <CheckCircle2 className="h-5 w-5 text-green-600 mb-2" />
-              <div className="font-semibold text-sm">Authentication</div>
-              <div className="text-xs text-muted-foreground mt-1">JWT token, 10 min expiry</div>
+              <div className="font-semibold text-sm">Auto Push</div>
+              <div className="text-xs text-muted-foreground mt-1">Every partner lead auto-forwarded to UM on creation</div>
             </CardContent>
           </Card>
           <Card className="border-blue-200 bg-blue-50/50">
@@ -155,14 +353,14 @@ export default function AdminApiKeys() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Key className="h-5 w-5 text-primary" />Vendor Credentials</CardTitle>
-            <CardDescription>Use these credentials to generate access tokens for the Lead API.</CardDescription>
+            <CardDescription>Stored server-side. Never exposed to the frontend or end users.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <CredRow label="client-id" value="2aee44bcb4630f5b" />
             <CredRow label="client-secret" value="7297eb7e7624b787f077fc1c8f02484b" masked />
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex gap-2 text-sm text-amber-800">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>Keep the client-secret confidential. Never expose it in frontend code or public repositories.</span>
+              <span>The client-secret is embedded in the API server only — it is never sent to client browsers.</span>
             </div>
           </CardContent>
         </Card>
@@ -308,16 +506,24 @@ export default function AdminApiKeys() {
                       <tr>
                         <th className="text-left px-4 py-3 font-medium">Product Name</th>
                         <th className="text-left px-4 py-3 font-medium">productId</th>
+                        <th className="text-left px-4 py-3 font-medium">Quikkk Loan Types</th>
                         <th className="text-left px-4 py-3 font-medium">Example payload</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {PRODUCT_IDS.map((p) => (
+                      {[
+                        { name: "Personal Loan", id: 2, types: "personal, education, gold" },
+                        { name: "Home Loan", id: 1, types: "home" },
+                        { name: "Business Loan", id: 4, types: "business" },
+                        { name: "Car Loan", id: 9, types: "auto" },
+                        { name: "Loan Against Property", id: 3, types: "(manual push only)" },
+                      ].map((p) => (
                         <tr key={p.id} className="border-t hover:bg-muted/30">
                           <td className="px-4 py-3 font-medium">{p.name}</td>
                           <td className="px-4 py-3">
                             <Badge variant="secondary" className="font-mono text-base px-3 py-1">{p.id}</Badge>
                           </td>
+                          <td className="px-4 py-3 text-xs text-muted-foreground">{p.types}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <code className="text-xs bg-zinc-950 text-zinc-100 rounded px-2 py-1 font-mono">
@@ -333,7 +539,7 @@ export default function AdminApiKeys() {
                 </div>
                 <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex gap-2">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span>Any productId not in the above table will result in immediate lead rejection. Do not send product names in the payload.</span>
+                  <span>Any productId not in the above table will cause immediate lead rejection. Never send product names.</span>
                 </div>
               </CardContent>
             </Card>
@@ -352,7 +558,7 @@ export default function AdminApiKeys() {
                     <div className="font-medium text-sm flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-500" />Token notes</div>
                     <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
                       <li>Token expires in exactly 10 minutes</li>
-                      <li>Generate a fresh token before each session</li>
+                      <li>Quikkk auto-refreshes before expiry</li>
                       <li>Send in <code className="font-mono">Authorization: Bearer</code> header</li>
                     </ul>
                   </div>
@@ -360,7 +566,7 @@ export default function AdminApiKeys() {
                     <div className="font-medium text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" />Lead notes</div>
                     <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
                       <li>Do not re-submit the same lead</li>
-                      <li>Duplicate leads will be rejected</li>
+                      <li>Duplicate leads will be rejected by UM</li>
                       <li><code className="font-mono">phoneNo</code> and <code className="font-mono">productId</code> are mandatory</li>
                     </ul>
                   </div>

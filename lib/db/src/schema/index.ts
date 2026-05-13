@@ -105,6 +105,9 @@ export const loanApplicationsTable = pgTable("loan_applications", {
   recoveredAmount: numeric("recovered_amount").notNull().default("0"),
   customerName: varchar("customer_name", { length: 200 }),
   customerPhone: varchar("customer_phone", { length: 20 }),
+  umLeadId: varchar("um_lead_id", { length: 100 }),
+  umStatus: varchar("um_status", { length: 20 }),
+  umPushedAt: timestamp("um_pushed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

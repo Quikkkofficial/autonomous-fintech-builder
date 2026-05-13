@@ -10,6 +10,7 @@ import {
 import { eq, desc, sql } from "drizzle-orm";
 import { requireRole } from "../lib/session";
 import { genId, calcEmi } from "../lib/utils";
+import { pushLead } from "../lib/urbanmoney";
 
 const router: IRouter = Router();
 router.use("/partner", requireRole("sales_partner"));
@@ -87,7 +88,27 @@ router.post("/partner/leads", async (req, res) => {
     title: "New loan application created",
     message: `A loan application ${id} for ${lender.name} was created on your behalf by Quikkk channel partner.`,
   });
-  res.json(inserted[0]);
+
+  const lead = inserted[0]!;
+
+  pushLead({
+    internalLeadId: lead.id,
+    customerName: customerName,
+    phoneNo: customerPhone,
+    loanType: loanType,
+    loanAmount: Number(amount),
+    remarks: `Partner referred|${purpose ?? ""}`.replace(/\|$/, ""),
+  }).then(async (umResult) => {
+    await db.update(loanApplicationsTable)
+      .set({
+        umLeadId: umResult.umLeadId ?? undefined,
+        umStatus: umResult.success ? "pushed" : "failed",
+        umPushedAt: new Date(),
+      })
+      .where(eq(loanApplicationsTable.id, lead.id));
+  }).catch(() => {});
+
+  res.json(lead);
 });
 
 router.get("/partner/payouts", async (req, res) => {
