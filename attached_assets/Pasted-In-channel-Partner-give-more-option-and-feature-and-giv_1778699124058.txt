@@ -1,0 +1,134 @@
+In channel Partner give more option and feature and give option to bulk upload and in Collection dashboard give more option and feature for trackable add omni channel feature also. and create section for admin/, /partner/, /collection/* API key can intigrate with any platform. and give button different for /partner/, /collection/ in home page. create different login page for admin and Channel Partner/Collection Partner. Please add products Gold Loan, FD Loan, Mutual Fund Loan and Insurance loan. remove Partner login and Admin from header
+make it fully responsive and fast , in mobile/tab view after login UI/UX look like app.  Add client api details and every thing will be visible on the admin dasboard here are the api instrustion "Lead Integration API Documentation for Mekyek
+Overview
+The integration uses JWT-based token authentication. Vendors must first generate an access token using credentials provided by us and then use that token to submit leads.
+There are two major APIs:
+1.Generate Token API – to generate a short-lived JWT token (valid for 10 minutes)
+2.Create Lead API – to submit leads into our system using the token
+ 
+Authentication Flow
+1.Vendor will get:
+oclient-id : 2aee44bcb4630f5b
+oclient-secret : 7297eb7e7624b787f077fc1c8f02484b
+2.Vendor calls Generate Token API with these values in request headers
+3.System validates credentials and returns a JWT access token (valid for 10 minutes)
+4.Vendor uses this token in the Authorization header while calling the Create Lead API
+ 
+1. Generate Token API
+Endpoint
+POST https://umapi-uat.urbanmoney.com/tpapi/v1/generateToken
+Headers (Mandatory)
+client-id: <your_client_id>
+client-secret: <your_client_secret>
+Content-Type: application/json
+Request Body
+Not Required
+Success Response (200 OK)
+{
+  "access_token": "<jwt_token>",
+  "token_type": "Bearer",
+  "expires_in": "10 min"
+}
+Error Responses
+400 Bad Request – Missing headers
+{
+  "message": "client-id and client-secret are required in headers"
+}
+401 Unauthorized – Invalid credentials
+{
+  "message": "Invalid credentials"
+}
+ 
+2. Create Lead API
+Endpoint
+POST https://umapi-uat.urbanmoney.com/tpapi/v1/lead/create
+Headers (Mandatory)
+Authorization: Bearer <access_token>
+Content-Type: application/json
+Request Payload
+{
+  "customerName": "Rahul Sharma",
+  "countryCode": "+91",
+  "phoneNo": "9876543210",
+  "loanAmount": 500000,
+  "monthlyIncome": 45000,
+  "creditScore": 750,
+ “productId”:2
+  "remarks": "Customer interested in personal loan"
+}
+Field Details
+Field Name Type Required Description
+customerName string No Customer full name
+countryCode string No Default value is +91
+phoneNo string Yes 10-digit mobile number
+loanAmount number No Loan amount requested
+monthlyIncome number No Monthly income
+creditScore number No Credit score
+productId number Yes Numeric product identifier (see below)
+remarks string No Multiple remarks are allowed. Use pipe (|) as Saperator
+ 
+Lead Validation Rules
+phoneNo, productId is mandatory
+phoneNo must be exactly 10 digits
+Token must be valid and not expired
+ 
+Important: Product ID Mapping
+The productId field is mandatory.
+👉 Must send only the numeric productId value, not the product name.
+ 
+Allowed Product IDs
+Product Name productId
+Home Loan 1
+Loan Against Property 3
+Business Loan 4
+Car Loan 9
+Personal Loan 2
+ 
+Examples
+Business Loan
+"productId": 4
+Home Loan
+"productId": 1
+ 
+⚠️ Any invalid or unsupported productId will result in lead rejection.
+Note: Product name should not be sent in the request payload. Only the corresponding numeric productId must be provided.
+ 
+Success Response (200 OK)
+{
+  "message”:”Lead accepted”
+  "leadId": “<vendor_lead_id>”
+}
+ 
+Error Responses
+400 Bad Request
+{
+  "message": "Invalid phone number"
+}
+400 Bad Request
+{
+  "message": "Invalid Product Id"
+}
+ 
+401 Unauthorized
+{
+  "message": "Invalid or expired token"
+}
+500 Internal Server Error
+{
+  "message": "Internal Server Error."
+}
+ 
+Remarks Format (Important)
+remarks support multiple values
+Use pipe (|) as a separator
+Trailing pipes are allowed
+Example:
+ABC|CFF|Customer follow-up pending|
+Each value will be processed as a separate remark internally.
+ 
+Notes for Vendors
+Token expires in 10 minutes; generate a new token after expiry
+Always send token in Authorization header
+Do not resend the same lead multiple times
+Leads may be rejected if already present in the system
+"

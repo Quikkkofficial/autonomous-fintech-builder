@@ -1,4 +1,4 @@
-import { Users, FileText, Landmark, BarChart3, Wallet, AlertTriangle } from "lucide-react";
+import { Users, FileText, Landmark, BarChart3, Wallet, AlertTriangle, KeyRound } from "lucide-react";
 import { PanelLayout, PanelNavItem } from "./panel-layout";
 
 const items: PanelNavItem[] = [
@@ -8,6 +8,7 @@ const items: PanelNavItem[] = [
   { href: "/admin/lenders", label: "Lenders", icon: Landmark },
   { href: "/admin/payouts", label: "Partner Payouts", icon: Wallet },
   { href: "/admin/collections", label: "Collections", icon: AlertTriangle },
+  { href: "/admin/api-keys", label: "API Integration", icon: KeyRound },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {

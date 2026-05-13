@@ -31,16 +31,21 @@ import AdminApplications from "@/pages/admin/applications";
 import AdminLenders from "@/pages/admin/lenders";
 import AdminPayouts from "@/pages/admin/payouts";
 import AdminCollections from "@/pages/admin/collections";
+import AdminApiKeys from "@/pages/admin/api-keys";
 
 import PartnerOverview from "@/pages/partner/overview";
 import PartnerLeads from "@/pages/partner/leads";
 import PartnerNewLead from "@/pages/partner/new-lead";
 import PartnerPayouts from "@/pages/partner/payouts";
+import PartnerBulkUpload from "@/pages/partner/bulk-upload";
+import PartnerApiIntegration from "@/pages/partner/api-integration";
 
 import CollectionOverview from "@/pages/collection/overview";
 import CollectionCases from "@/pages/collection/cases";
 import CollectionCaseDetail from "@/pages/collection/case-detail";
 import CollectionFollowups from "@/pages/collection/followups";
+import CollectionOmniChannel from "@/pages/collection/omni-channel";
+import CollectionApiIntegration from "@/pages/collection/api-integration";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -86,16 +91,21 @@ function Router() {
       <Route path="/admin/lenders"><AP><AdminLenders /></AP></Route>
       <Route path="/admin/payouts"><AP><AdminPayouts /></AP></Route>
       <Route path="/admin/collections"><AP><AdminCollections /></AP></Route>
+      <Route path="/admin/api-keys"><AP><AdminApiKeys /></AP></Route>
 
       <Route path="/partner"><PP><PartnerOverview /></PP></Route>
       <Route path="/partner/leads"><PP><PartnerLeads /></PP></Route>
       <Route path="/partner/leads/new"><PP><PartnerNewLead /></PP></Route>
+      <Route path="/partner/bulk-upload"><PP><PartnerBulkUpload /></PP></Route>
       <Route path="/partner/payouts"><PP><PartnerPayouts /></PP></Route>
+      <Route path="/partner/api-integration"><PP><PartnerApiIntegration /></PP></Route>
 
       <Route path="/collection"><CP><CollectionOverview /></CP></Route>
       <Route path="/collection/cases"><CP><CollectionCases /></CP></Route>
       <Route path="/collection/cases/:id"><CP><CollectionCaseDetail /></CP></Route>
       <Route path="/collection/followups"><CP><CollectionFollowups /></CP></Route>
+      <Route path="/collection/omni-channel"><CP><CollectionOmniChannel /></CP></Route>
+      <Route path="/collection/api-integration"><CP><CollectionApiIntegration /></CP></Route>
 
       <Route component={NotFound} />
     </Switch>

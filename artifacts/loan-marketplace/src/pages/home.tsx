@@ -51,6 +51,7 @@ export default function Home() {
       <RateComparison />
       <Testimonials />
       <Trust />
+      <PartnerPortal />
       <CTA />
       <Footer />
     </div>
@@ -82,6 +83,9 @@ function Nav() {
           <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
         </nav>
         <div className="flex items-center gap-2">
+          <Link href="/partner/login">
+            <Button variant="ghost" className="hidden md:inline-flex text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">Partner portal</Button>
+          </Link>
           <Link href="/login">
             <Button variant="ghost" className="hidden sm:inline-flex">Sign in</Button>
           </Link>
@@ -555,6 +559,76 @@ function Trust() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function PartnerPortal() {
+  return (
+    <section className="py-20 px-6 bg-gradient-to-br from-indigo-50 to-white">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <Badge variant="outline" className="gap-1.5 px-3 py-1.5 mb-4 border-indigo-200 text-indigo-700 bg-indigo-50">
+            <Users className="w-3.5 h-3.5" /> For business partners
+          </Badge>
+          <h2 className="text-4xl font-bold tracking-tight">Partner with Quikkk</h2>
+          <p className="text-muted-foreground mt-3 text-lg max-w-xl mx-auto">
+            Grow your earnings by sourcing loans, or help recover outstanding dues — two specialised portals built for professionals.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="rounded-3xl border-2 border-indigo-200 bg-white p-8 space-y-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">Channel Partner Portal</h3>
+              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                Source loan leads, track your pipeline, earn commissions on every disbursal. Bulk upload leads, get API access, and manage your entire book from one dashboard.
+              </p>
+            </div>
+            <ul className="space-y-2 text-sm">
+              {["Commission on every disbursal", "Bulk lead upload (CSV)", "CRM & API integration", "Real-time pipeline tracking"].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/partner/login">
+              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 gap-2">
+                Channel Partner Login <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="rounded-3xl border-2 border-amber-200 bg-white p-8 space-y-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center">
+              <Phone className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">Collection Partner Portal</h3>
+              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                Manage delinquent cases, log follow-ups, and track recoveries across all channels. Omni-channel tools including voice, SMS, WhatsApp, and email.
+              </p>
+            </div>
+            <ul className="space-y-2 text-sm">
+              {["DPD-bucketed case management", "Omni-channel outreach tools", "Promise-to-pay tracking", "Dialer & CRM integration"].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />{f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/partner/login">
+              <Button className="w-full bg-amber-500 hover:bg-amber-600 gap-2 text-white">
+                Collection Partner Login <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          Admin? <Link href="/admin/login" className="text-foreground underline underline-offset-2">Admin login →</Link>
+        </p>
       </div>
     </section>
   );
