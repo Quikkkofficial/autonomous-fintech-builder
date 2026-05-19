@@ -34,6 +34,8 @@ import AdminCollections from "@/pages/admin/collections";
 import AdminApiKeys from "@/pages/admin/api-keys";
 import AdminBankIntegrations from "@/pages/admin/bank-integrations";
 import AdminDispatchLog from "@/pages/admin/dispatch-log";
+import AdminLeadUpload from "@/pages/admin/lead-upload";
+import AdminOmniChannel from "@/pages/admin/omni-channel";
 
 import PartnerOverview from "@/pages/partner/overview";
 import PartnerLeads from "@/pages/partner/leads";
@@ -41,6 +43,7 @@ import PartnerNewLead from "@/pages/partner/new-lead";
 import PartnerPayouts from "@/pages/partner/payouts";
 import PartnerBulkUpload from "@/pages/partner/bulk-upload";
 import PartnerApiIntegration from "@/pages/partner/api-integration";
+import PartnerOmniChannel from "@/pages/partner/omni-channel";
 
 import CollectionOverview from "@/pages/collection/overview";
 import CollectionCases from "@/pages/collection/cases";
@@ -96,6 +99,8 @@ function Router() {
       <Route path="/admin/api-keys"><AP><AdminApiKeys /></AP></Route>
       <Route path="/admin/bank-integrations"><AP><AdminBankIntegrations /></AP></Route>
       <Route path="/admin/dispatch-log"><AP><AdminDispatchLog /></AP></Route>
+      <Route path="/admin/lead-upload"><AP><AdminLeadUpload /></AP></Route>
+      <Route path="/admin/omni-channel"><AP><AdminOmniChannel /></AP></Route>
 
       <Route path="/partner"><PP><PartnerOverview /></PP></Route>
       <Route path="/partner/leads"><PP><PartnerLeads /></PP></Route>
@@ -103,6 +108,7 @@ function Router() {
       <Route path="/partner/bulk-upload"><PP><PartnerBulkUpload /></PP></Route>
       <Route path="/partner/payouts"><PP><PartnerPayouts /></PP></Route>
       <Route path="/partner/api-integration"><PP><PartnerApiIntegration /></PP></Route>
+      <Route path="/partner/omni-channel"><PP><PartnerOmniChannel /></PP></Route>
 
       <Route path="/collection"><CP><CollectionOverview /></CP></Route>
       <Route path="/collection/cases"><CP><CollectionCases /></CP></Route>

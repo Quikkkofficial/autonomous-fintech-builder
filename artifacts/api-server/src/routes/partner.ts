@@ -141,4 +141,28 @@ router.get("/partner/timeseries", async (req, res) => {
   res.json(out);
 });
 
+router.post("/partner/omni/send", async (req, res) => {
+  const partnerId = (req as unknown as { userId: number }).userId;
+  const { channel, audience, specificLeadId, message } = req.body ?? {};
+  if (!channel || !message) return res.status(400).json({ error: "channel and message required" });
+  const leads = specificLeadId
+    ? await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, specificLeadId)).limit(1)
+    : await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.referredByPartnerId, partnerId));
+  const filtered = audience === "pending"
+    ? leads.filter((l) => l.status === "submitted" || l.status === "under_review")
+    : audience === "approved"
+    ? leads.filter((l) => l.status === "approved")
+    : leads;
+  for (const lead of filtered.slice(0, 50)) {
+    await db.insert(notificationsTable).values({
+      id: genId("NOTIF"),
+      userId: lead.userId,
+      channel,
+      title: `Partner message via ${channel}`,
+      message,
+    });
+  }
+  res.json({ ok: true, recipientCount: filtered.length });
+});
+
 export default router;

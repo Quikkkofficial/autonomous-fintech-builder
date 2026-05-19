@@ -1,4 +1,4 @@
-import { BarChart3, FileText, PlusCircle, Wallet, KeyRound, Upload } from "lucide-react";
+import { BarChart3, FileText, PlusCircle, Wallet, KeyRound, Upload, Radio } from "lucide-react";
 import { PanelLayout, PanelNavItem } from "./panel-layout";
 
 const items: PanelNavItem[] = [
@@ -6,6 +6,7 @@ const items: PanelNavItem[] = [
   { href: "/partner/leads", label: "My Leads", icon: FileText },
   { href: "/partner/leads/new", label: "Create Lead", icon: PlusCircle },
   { href: "/partner/bulk-upload", label: "Bulk Upload", icon: Upload },
+  { href: "/partner/omni-channel", label: "Omni-Channel", icon: Radio },
   { href: "/partner/payouts", label: "Earnings", icon: Wallet },
   { href: "/partner/api-integration", label: "API Integration", icon: KeyRound },
 ];

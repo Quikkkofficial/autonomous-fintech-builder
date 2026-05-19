@@ -203,6 +203,108 @@ router.get("/admin/followups", async (_req, res) => {
   res.json(rows);
 });
 
+// ── Lead Upload ──────────────────────────────────────────────────────────────
+
+router.post("/admin/lead-upload/loan", async (req, res) => {
+  const { customerName, customerPhone, loanType, amount, tenureMonths } = req.body ?? {};
+  if (!customerName || !customerPhone || !loanType || !amount) {
+    return res.status(400).json({ error: "missing_fields" });
+  }
+  const lenders = await db.select().from(lendersTable).limit(1);
+  const lender = lenders[0];
+  if (!lender) return res.status(500).json({ error: "no_lenders" });
+  const rate = Number(lender.minRate);
+  const tenure = Number(tenureMonths) || 36;
+  const emi = (Number(amount) * (rate / 1200) * Math.pow(1 + rate / 1200, tenure)) / (Math.pow(1 + rate / 1200, tenure) - 1);
+  const app = await db.insert(loanApplicationsTable).values({
+    id: genId("APP"),
+    userId: 1,
+    lenderId: lender.id,
+    lenderName: lender.name,
+    type: loanType,
+    amount: String(amount),
+    tenureMonths: tenure,
+    interestRate: lender.minRate,
+    emi: String(Math.round(emi)),
+    status: "submitted",
+    customerName,
+    customerPhone,
+    statusHistory: [{ status: "submitted", at: new Date().toISOString(), note: "Lead uploaded by admin" }],
+  }).returning();
+  res.json({ ok: true, id: app[0]?.id });
+});
+
+router.post("/admin/lead-upload/collection", async (req, res) => {
+  const { customerName, customerPhone, outstandingAmount, dpd, loanId } = req.body ?? {};
+  if (!customerName || !customerPhone || !outstandingAmount) {
+    return res.status(400).json({ error: "missing_fields" });
+  }
+  if (loanId) {
+    const existing = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, loanId)).limit(1))[0];
+    if (existing) {
+      await db.update(loanApplicationsTable).set({
+        dpd: Number(dpd) || 1,
+        outstandingAmount: String(outstandingAmount),
+        customerName,
+        customerPhone,
+      }).where(eq(loanApplicationsTable.id, loanId));
+      return res.json({ ok: true, id: loanId });
+    }
+  }
+  const lenders = await db.select().from(lendersTable).limit(1);
+  const lender = lenders[0];
+  if (!lender) return res.status(500).json({ error: "no_lenders" });
+  const app = await db.insert(loanApplicationsTable).values({
+    id: genId("APP"),
+    userId: 1,
+    lenderId: lender.id,
+    lenderName: lender.name,
+    type: "personal",
+    amount: String(outstandingAmount),
+    tenureMonths: 36,
+    interestRate: lender.minRate,
+    emi: "0",
+    status: "disbursed",
+    customerName,
+    customerPhone,
+    outstandingAmount: String(outstandingAmount),
+    dpd: Number(dpd) || 0,
+    statusHistory: [{ status: "disbursed", at: new Date().toISOString(), note: "Collection case imported by admin" }],
+  }).returning();
+  res.json({ ok: true, id: app[0]?.id });
+});
+
+// ── Omni-Channel ─────────────────────────────────────────────────────────────
+
+router.post("/admin/omni/send", async (req, res) => {
+  const { channel, audience, message, purpose } = req.body ?? {};
+  if (!channel || !message) return res.status(400).json({ error: "channel and message required" });
+  let users: { id: number }[] = [];
+  if (audience === "all_customers" || audience === "all_leads") {
+    users = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.role, "customer")).limit(200);
+  } else if (audience === "kyc_pending") {
+    users = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.kycStatus, "pending")).limit(200);
+  } else {
+    const statusMap: Record<string, string> = { approved: "approved", disbursed: "disbursed", overdue_1_30: "disbursed", overdue_31_60: "disbursed", overdue_60_plus: "disbursed" };
+    const status = statusMap[audience];
+    if (status) {
+      const apps = await db.select({ userId: loanApplicationsTable.userId }).from(loanApplicationsTable).where(eq(loanApplicationsTable.status, status)).limit(200);
+      users = apps.map((a) => ({ id: a.userId }));
+    }
+  }
+  const uniqueUserIds = [...new Set(users.map((u) => u.id))];
+  for (const uid of uniqueUserIds.slice(0, 100)) {
+    await db.insert(notificationsTable).values({
+      id: genId("NOTIF"),
+      userId: uid,
+      channel,
+      title: purpose === "collection" ? "Payment reminder" : "Loan offer update",
+      message,
+    });
+  }
+  res.json({ ok: true, recipientCount: uniqueUserIds.length });
+});
+
 // ── Lender Integrations ──────────────────────────────────────────────────────
 
 router.get("/admin/integrations", async (_req, res) => {
