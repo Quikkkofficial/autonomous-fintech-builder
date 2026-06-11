@@ -15,7 +15,7 @@ import { pushLead } from "../lib/urbanmoney";
 const router: IRouter = Router();
 router.use("/partner", requireRole("sales_partner"));
 
-router.get("/partner/stats", async (req, res) => {
+router.get("/partner/stats", async (req, res): Promise<void> => {
   const partnerId = (req as unknown as { userId: number }).userId;
   const leads = await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.referredByPartnerId, partnerId));
   const payouts = await db.select().from(partnerPayoutsTable).where(eq(partnerPayoutsTable.partnerId, partnerId));
@@ -35,20 +35,20 @@ router.get("/partner/stats", async (req, res) => {
   });
 });
 
-router.get("/partner/leads", async (req, res) => {
+router.get("/partner/leads", async (req, res): Promise<void> => {
   const partnerId = (req as unknown as { userId: number }).userId;
   const rows = await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.referredByPartnerId, partnerId)).orderBy(desc(loanApplicationsTable.createdAt));
   res.json(rows);
 });
 
-router.post("/partner/leads", async (req, res) => {
+router.post("/partner/leads", async (req, res): Promise<void> => {
   const partnerId = (req as unknown as { userId: number }).userId;
   const { customerName, customerPhone, lenderId, loanType, amount, tenureMonths, purpose } = req.body ?? {};
   if (!customerName || !customerPhone || !lenderId || !loanType || !amount || !tenureMonths) {
-    return res.status(400).json({ error: "missing_fields" });
+    res.status(400).json({ error: "missing_fields" }); return;
   }
   const lender = (await db.select().from(lendersTable).where(eq(lendersTable.id, lenderId)).limit(1))[0];
-  if (!lender) return res.status(400).json({ error: "lender_not_found" });
+  if (!lender) { res.status(400).json({ error: "lender_not_found" }); return; }
 
   // Find or create user (customer)
   let customer = (await db.select().from(usersTable).where(eq(usersTable.phone, customerPhone)).limit(1))[0];
@@ -111,18 +111,18 @@ router.post("/partner/leads", async (req, res) => {
   res.json(lead);
 });
 
-router.get("/partner/payouts", async (req, res) => {
+router.get("/partner/payouts", async (req, res): Promise<void> => {
   const partnerId = (req as unknown as { userId: number }).userId;
   const rows = await db.select().from(partnerPayoutsTable).where(eq(partnerPayoutsTable.partnerId, partnerId)).orderBy(desc(partnerPayoutsTable.createdAt));
   res.json(rows);
 });
 
-router.get("/partner/lenders", async (_req, res) => {
+router.get("/partner/lenders", async (_req, res): Promise<void> => {
   const rows = await db.select().from(lendersTable);
   res.json(rows);
 });
 
-router.get("/partner/timeseries", async (req, res) => {
+router.get("/partner/timeseries", async (req, res): Promise<void> => {
   const partnerId = (req as unknown as { userId: number }).userId;
   const since = new Date(Date.now() - 30 * 24 * 3600 * 1000);
   const apps = await db.select().from(loanApplicationsTable)
@@ -141,10 +141,10 @@ router.get("/partner/timeseries", async (req, res) => {
   res.json(out);
 });
 
-router.post("/partner/omni/send", async (req, res) => {
+router.post("/partner/omni/send", async (req, res): Promise<void> => {
   const partnerId = (req as unknown as { userId: number }).userId;
   const { channel, audience, specificLeadId, message } = req.body ?? {};
-  if (!channel || !message) return res.status(400).json({ error: "channel and message required" });
+  if (!channel || !message) { res.status(400).json({ error: "channel and message required" }); return; }
   const leads = specificLeadId
     ? await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, specificLeadId)).limit(1)
     : await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.referredByPartnerId, partnerId));

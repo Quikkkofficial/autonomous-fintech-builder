@@ -6,11 +6,11 @@ import { generateToken, getStatus, pushLead, LOAN_TYPE_TO_PRODUCT_ID } from "../
 
 const router: IRouter = Router();
 
-router.get("/um/status", requireRole("admin"), (_req, res) => {
+router.get("/um/status", requireRole("admin"), (_req, res): void => {
   res.json(getStatus());
 });
 
-router.post("/um/token/refresh", requireRole("admin"), async (_req, res) => {
+router.post("/um/token/refresh", requireRole("admin"), async (_req, res): Promise<void> => {
   try {
     await generateToken();
     res.json({ ok: true, status: getStatus() });
@@ -19,12 +19,13 @@ router.post("/um/token/refresh", requireRole("admin"), async (_req, res) => {
   }
 });
 
-router.post("/um/push/:leadId", requireRole("admin"), async (req, res) => {
-  const { leadId } = req.params;
-  const lead = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, leadId)).limit(1))[0];
-  if (!lead) return res.status(404).json({ error: "lead_not_found" });
+router.post("/um/push/:leadId", requireRole("admin"), async (req, res): Promise<void> => {
+  const leadId = String(req.params["leadId"] ?? "");
+  if (!leadId) { res.status(400).json({ error: "missing_lead_id" }); return; }
 
-  if (!lead.customerPhone) return res.status(400).json({ error: "lead_has_no_phone" });
+  const lead = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, leadId)).limit(1))[0];
+  if (!lead) { res.status(404).json({ error: "lead_not_found" }); return; }
+  if (!lead.customerPhone) { res.status(400).json({ error: "lead_has_no_phone" }); return; }
 
   const result = await pushLead({
     internalLeadId: lead.id,
@@ -41,19 +42,18 @@ router.post("/um/push/:leadId", requireRole("admin"), async (req, res) => {
       umStatus: result.success ? "pushed" : "failed",
       umPushedAt: now,
     })
-    .where(eq(loanApplicationsTable.id, leadId!));
+    .where(eq(loanApplicationsTable.id, leadId));
 
-  // Record in lead_dispatches — upsert by checking existing record
   const umIntg = (await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.slug, "urbanmoney")).limit(1))[0];
   if (umIntg) {
     const dispatchStatus = result.success ? "accepted" : "error";
     await db.insert(leadDispatchesTable).values({
-      leadId: leadId!,
+      leadId,
       integrationId: umIntg.id,
       integrationName: umIntg.name,
       status: dispatchStatus,
       externalId: result.umLeadId ?? null,
-      responseMessage: result.error ?? (result.success ? "Lead accepted by Urban Money" : "Push failed"),
+      responseMessage: result.message ?? (result.success ? "Lead accepted by Urban Money" : "Push failed"),
       dispatchedAt: now,
       updatedAt: now,
     });
@@ -73,7 +73,7 @@ router.post("/um/push/:leadId", requireRole("admin"), async (req, res) => {
   res.json({ ok: result.success, ...result });
 });
 
-router.get("/um/products", requireRole("admin"), (_req, res) => {
+router.get("/um/products", requireRole("admin"), (_req, res): void => {
   const products = [
     { name: "Personal Loan", productId: 2, loanTypes: ["personal", "education", "gold", "fd", "mutual_fund", "insurance"] },
     { name: "Home Loan", productId: 1, loanTypes: ["home"] },

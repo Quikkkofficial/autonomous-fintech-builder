@@ -18,7 +18,7 @@ import { genId } from "../lib/utils";
 const router: IRouter = Router();
 router.use("/admin", requireRole("admin"));
 
-router.get("/admin/stats", async (_req, res) => {
+router.get("/admin/stats", async (_req, res): Promise<void> => {
   const [users, customers, partners, collectors, loanApps, cardApps] = await Promise.all([
     db.select({ c: sql<number>`count(*)::int` }).from(usersTable),
     db.select({ c: sql<number>`count(*)::int` }).from(usersTable).where(eq(usersTable.role, "customer")),
@@ -51,7 +51,7 @@ router.get("/admin/stats", async (_req, res) => {
   });
 });
 
-router.get("/admin/users", async (req, res) => {
+router.get("/admin/users", async (req, res): Promise<void> => {
   const role = (req.query["role"] as string) || undefined;
   const search = (req.query["q"] as string) || undefined;
   const conditions = [];
@@ -85,9 +85,9 @@ router.get("/admin/users", async (req, res) => {
   })));
 });
 
-router.patch("/admin/users/:id", async (req, res) => {
+router.patch("/admin/users/:id", async (req, res): Promise<void> => {
   const id = Number(req.params["id"]);
-  if (!Number.isFinite(id)) return res.status(400).json({ error: "invalid_id" });
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "invalid_id" }); return; }
   const { role, name, email, partnerCode } = req.body ?? {};
   const update: Record<string, unknown> = {};
   if (role) update["role"] = role;
@@ -98,7 +98,7 @@ router.patch("/admin/users/:id", async (req, res) => {
   res.json(updated[0]);
 });
 
-router.get("/admin/applications", async (req, res) => {
+router.get("/admin/applications", async (req, res): Promise<void> => {
   const status = (req.query["status"] as string) || undefined;
   const rows = status
     ? await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.status, status)).orderBy(desc(loanApplicationsTable.createdAt)).limit(300)
@@ -106,12 +106,12 @@ router.get("/admin/applications", async (req, res) => {
   res.json(rows);
 });
 
-router.patch("/admin/applications/:id", async (req, res) => {
+router.patch("/admin/applications/:id", async (req, res): Promise<void> => {
   const id = req.params["id"];
   const { status, note } = req.body ?? {};
-  if (!status) return res.status(400).json({ error: "status_required" });
+  if (!status) { res.status(400).json({ error: "status_required" }); return; }
   const existing = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, id!)).limit(1))[0];
-  if (!existing) return res.status(404).json({ error: "not_found" });
+  if (!existing) { res.status(404).json({ error: "not_found" }); return; }
   const history = [...(existing.statusHistory ?? []), { status, at: new Date().toISOString(), note: note || `Status changed to ${status} by admin` }];
   const update: Record<string, unknown> = { status, statusHistory: history };
   if (status === "disbursed") {
@@ -139,12 +139,12 @@ router.patch("/admin/applications/:id", async (req, res) => {
   res.json(updated[0]);
 });
 
-router.get("/admin/lenders", async (_req, res) => {
+router.get("/admin/lenders", async (_req, res): Promise<void> => {
   const rows = await db.select().from(lendersTable);
   res.json(rows);
 });
 
-router.patch("/admin/lenders/:id", async (req, res) => {
+router.patch("/admin/lenders/:id", async (req, res): Promise<void> => {
   const id = req.params["id"];
   const update = req.body ?? {};
   const allowed = ["name", "tagline", "minRate", "maxRate", "minAmount", "maxAmount", "processingFeePct", "minIncome", "minCreditScore", "approvalHours", "rating"];
@@ -154,12 +154,12 @@ router.patch("/admin/lenders/:id", async (req, res) => {
   res.json(updated[0]);
 });
 
-router.get("/admin/payouts", async (_req, res) => {
+router.get("/admin/payouts", async (_req, res): Promise<void> => {
   const payouts = await db.select().from(partnerPayoutsTable).orderBy(desc(partnerPayoutsTable.createdAt)).limit(200);
   res.json(payouts);
 });
 
-router.patch("/admin/payouts/:id", async (req, res) => {
+router.patch("/admin/payouts/:id", async (req, res): Promise<void> => {
   const id = Number(req.params["id"]);
   const { status } = req.body ?? {};
   const update: Record<string, unknown> = { status };
@@ -168,19 +168,19 @@ router.patch("/admin/payouts/:id", async (req, res) => {
   res.json(updated[0]);
 });
 
-router.get("/admin/collections", async (_req, res) => {
+router.get("/admin/collections", async (_req, res): Promise<void> => {
   const overdue = await db.select().from(loanApplicationsTable)
     .where(sql`${loanApplicationsTable.dpd} > 0`)
     .orderBy(desc(loanApplicationsTable.dpd)).limit(200);
   res.json(overdue);
 });
 
-router.get("/admin/recent-activity", async (_req, res) => {
+router.get("/admin/recent-activity", async (_req, res): Promise<void> => {
   const recentNotifs = await db.select().from(notificationsTable).orderBy(desc(notificationsTable.createdAt)).limit(20);
   res.json(recentNotifs);
 });
 
-router.get("/admin/timeseries", async (_req, res) => {
+router.get("/admin/timeseries", async (_req, res): Promise<void> => {
   const since = new Date(Date.now() - 30 * 24 * 3600 * 1000);
   const apps = await db.select().from(loanApplicationsTable).where(gte(loanApplicationsTable.createdAt, since));
   const buckets: Record<string, { date: string; count: number; amount: number }> = {};
@@ -198,21 +198,21 @@ router.get("/admin/timeseries", async (_req, res) => {
   res.json(out);
 });
 
-router.get("/admin/followups", async (_req, res) => {
+router.get("/admin/followups", async (_req, res): Promise<void> => {
   const rows = await db.select().from(collectionFollowupsTable).orderBy(desc(collectionFollowupsTable.createdAt)).limit(100);
   res.json(rows);
 });
 
 // ── Lead Upload ──────────────────────────────────────────────────────────────
 
-router.post("/admin/lead-upload/loan", async (req, res) => {
+router.post("/admin/lead-upload/loan", async (req, res): Promise<void> => {
   const { customerName, customerPhone, loanType, amount, tenureMonths } = req.body ?? {};
   if (!customerName || !customerPhone || !loanType || !amount) {
-    return res.status(400).json({ error: "missing_fields" });
+    res.status(400).json({ error: "missing_fields" }); return;
   }
   const lenders = await db.select().from(lendersTable).limit(1);
   const lender = lenders[0];
-  if (!lender) return res.status(500).json({ error: "no_lenders" });
+  if (!lender) { res.status(500).json({ error: "no_lenders" }); return; }
   const rate = Number(lender.minRate);
   const tenure = Number(tenureMonths) || 36;
   const emi = (Number(amount) * (rate / 1200) * Math.pow(1 + rate / 1200, tenure)) / (Math.pow(1 + rate / 1200, tenure) - 1);
@@ -224,7 +224,7 @@ router.post("/admin/lead-upload/loan", async (req, res) => {
     type: loanType,
     amount: String(amount),
     tenureMonths: tenure,
-    interestRate: lender.minRate,
+    interestRate: String(lender.minRate),
     emi: String(Math.round(emi)),
     status: "submitted",
     customerName,
@@ -234,10 +234,10 @@ router.post("/admin/lead-upload/loan", async (req, res) => {
   res.json({ ok: true, id: app[0]?.id });
 });
 
-router.post("/admin/lead-upload/collection", async (req, res) => {
+router.post("/admin/lead-upload/collection", async (req, res): Promise<void> => {
   const { customerName, customerPhone, outstandingAmount, dpd, loanId } = req.body ?? {};
   if (!customerName || !customerPhone || !outstandingAmount) {
-    return res.status(400).json({ error: "missing_fields" });
+    res.status(400).json({ error: "missing_fields" }); return;
   }
   if (loanId) {
     const existing = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, loanId)).limit(1))[0];
@@ -248,12 +248,12 @@ router.post("/admin/lead-upload/collection", async (req, res) => {
         customerName,
         customerPhone,
       }).where(eq(loanApplicationsTable.id, loanId));
-      return res.json({ ok: true, id: loanId });
+      res.json({ ok: true, id: loanId }); return;
     }
   }
   const lenders = await db.select().from(lendersTable).limit(1);
   const lender = lenders[0];
-  if (!lender) return res.status(500).json({ error: "no_lenders" });
+  if (!lender) { res.status(500).json({ error: "no_lenders" }); return; }
   const app = await db.insert(loanApplicationsTable).values({
     id: genId("APP"),
     userId: 1,
@@ -262,7 +262,7 @@ router.post("/admin/lead-upload/collection", async (req, res) => {
     type: "personal",
     amount: String(outstandingAmount),
     tenureMonths: 36,
-    interestRate: lender.minRate,
+    interestRate: String(lender.minRate),
     emi: "0",
     status: "disbursed",
     customerName,
@@ -276,9 +276,9 @@ router.post("/admin/lead-upload/collection", async (req, res) => {
 
 // ── Omni-Channel ─────────────────────────────────────────────────────────────
 
-router.post("/admin/omni/send", async (req, res) => {
+router.post("/admin/omni/send", async (req, res): Promise<void> => {
   const { channel, audience, message, purpose } = req.body ?? {};
-  if (!channel || !message) return res.status(400).json({ error: "channel and message required" });
+  if (!channel || !message) { res.status(400).json({ error: "channel and message required" }); return; }
   let users: { id: number }[] = [];
   if (audience === "all_customers" || audience === "all_leads") {
     users = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.role, "customer")).limit(200);
@@ -307,16 +307,16 @@ router.post("/admin/omni/send", async (req, res) => {
 
 // ── Lender Integrations ──────────────────────────────────────────────────────
 
-router.get("/admin/integrations", async (_req, res) => {
+router.get("/admin/integrations", async (_req, res): Promise<void> => {
   const rows = await db.select().from(lenderIntegrationsTable).orderBy(lenderIntegrationsTable.createdAt);
   res.json(rows.map((r) => ({ ...r, clientSecret: undefined })));
 });
 
-router.post("/admin/integrations", async (req, res) => {
+router.post("/admin/integrations", async (req, res): Promise<void> => {
   const { name, slug, apiType, apiEndpoint, clientId, clientSecret, notes, supportedTypes } = req.body ?? {};
-  if (!name || !slug) return res.status(400).json({ error: "name and slug are required" });
+  if (!name || !slug) { res.status(400).json({ error: "name and slug are required" }); return; }
   const existing = await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.slug, slug)).limit(1);
-  if (existing.length > 0) return res.status(409).json({ error: "slug_already_exists" });
+  if (existing.length > 0) { res.status(409).json({ error: "slug_already_exists" }); return; }
   const row = await db.insert(lenderIntegrationsTable).values({
     id: genId("INTG"),
     name,
@@ -332,31 +332,30 @@ router.post("/admin/integrations", async (req, res) => {
   res.json({ ...row[0], clientSecret: undefined });
 });
 
-router.patch("/admin/integrations/:id", async (req, res) => {
+router.patch("/admin/integrations/:id", async (req, res): Promise<void> => {
   const id = req.params["id"];
   const allowed = ["name", "status", "apiEndpoint", "clientId", "clientSecret", "notes", "supportedTypes"];
   const update: Record<string, unknown> = {};
   for (const k of allowed) if (req.body[k] !== undefined) update[k] = req.body[k];
   const row = await db.update(lenderIntegrationsTable).set(update).where(eq(lenderIntegrationsTable.id, id!)).returning();
-  if (!row[0]) return res.status(404).json({ error: "not_found" });
+  if (!row[0]) { res.status(404).json({ error: "not_found" }); return; }
   res.json({ ...row[0], clientSecret: undefined });
 });
 
-router.delete("/admin/integrations/:id", async (req, res) => {
+router.delete("/admin/integrations/:id", async (req, res): Promise<void> => {
   const id = req.params["id"];
   const intg = (await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.id, id!)).limit(1))[0];
-  if (!intg) return res.status(404).json({ error: "not_found" });
-  if (intg.slug === "urbanmoney") return res.status(400).json({ error: "cannot_delete_system_integration" });
+  if (!intg) { res.status(404).json({ error: "not_found" }); return; }
+  if (intg.slug === "urbanmoney") { res.status(400).json({ error: "cannot_delete_system_integration" }); return; }
   await db.delete(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.id, id!));
   res.json({ ok: true });
 });
 
-router.post("/admin/integrations/:id/push-pending", async (req, res) => {
+router.post("/admin/integrations/:id/push-pending", async (req, res): Promise<void> => {
   const id = req.params["id"];
   const intg = (await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.id, id!)).limit(1))[0];
-  if (!intg) return res.status(404).json({ error: "not_found" });
-  if (intg.status !== "active") return res.status(400).json({ error: "integration_not_active" });
-  // Get leads that haven't been dispatched to this integration yet
+  if (!intg) { res.status(404).json({ error: "not_found" }); return; }
+  if (intg.status !== "active") { res.status(400).json({ error: "integration_not_active" }); return; }
   const dispatched = await db.select({ leadId: leadDispatchesTable.leadId }).from(leadDispatchesTable).where(eq(leadDispatchesTable.integrationId, id!));
   const dispatchedIds = dispatched.map((d) => d.leadId);
   const query = dispatchedIds.length > 0
@@ -382,7 +381,7 @@ router.post("/admin/integrations/:id/push-pending", async (req, res) => {
 
 // ── Lead Dispatch Log ────────────────────────────────────────────────────────
 
-router.get("/admin/dispatches", async (_req, res) => {
+router.get("/admin/dispatches", async (_req, res): Promise<void> => {
   const dispatches = await db.select().from(leadDispatchesTable).orderBy(desc(leadDispatchesTable.dispatchedAt)).limit(500);
   const leadIds = [...new Set(dispatches.map((d) => d.leadId))];
   let leads: Array<{
@@ -407,12 +406,12 @@ router.get("/admin/dispatches", async (_req, res) => {
   res.json(dispatches.map((d) => ({ ...d, lead: leadMap[d.leadId] ?? null })));
 });
 
-router.post("/admin/dispatches/repush/:leadId", async (req, res) => {
-  const { leadId } = req.params;
-  const lead = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, leadId!)).limit(1))[0];
-  if (!lead) return res.status(404).json({ error: "lead_not_found" });
+router.post("/admin/dispatches/repush/:leadId", async (req, res): Promise<void> => {
+  const leadId = String(req.params["leadId"] ?? "");
+  const lead = (await db.select().from(loanApplicationsTable).where(eq(loanApplicationsTable.id, leadId)).limit(1))[0];
+  if (!lead) { res.status(404).json({ error: "lead_not_found" }); return; }
   const activeIntgs = await db.select().from(lenderIntegrationsTable).where(eq(lenderIntegrationsTable.status, "active"));
-  if (activeIntgs.length === 0) return res.status(400).json({ error: "no_active_integrations" });
+  if (activeIntgs.length === 0) { res.status(400).json({ error: "no_active_integrations" }); return; }
   const now = new Date();
   for (const intg of activeIntgs) {
     await db.insert(leadDispatchesTable).values({
