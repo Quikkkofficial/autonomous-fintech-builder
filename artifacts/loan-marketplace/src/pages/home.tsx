@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
+import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
@@ -30,10 +30,6 @@ import {
   Gem,
   PiggyBank,
   Shield,
-  Banknote,
-  BarChart3,
-  Headphones,
-  Target,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -48,13 +44,6 @@ const fadeUp = {
   }),
 };
 
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: (i = 0) => ({
-    opacity: 1,
-    transition: { duration: 0.5, delay: i * 0.08 },
-  }),
-};
 
 function useScrollInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -80,7 +69,6 @@ export default function Home() {
       <HowItWorks />
       <Testimonials />
       <Trust />
-      <PartnerPortal />
       <CTA />
       <Footer />
     </div>
@@ -666,184 +654,6 @@ function Trust() {
             </motion.div>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-function PartnerPortal() {
-  const { ref, inView } = useScrollInView(0.1);
-
-  const channelFeatures = [
-    { icon: Banknote, text: "Commission on every disbursal" },
-    { icon: BarChart3, text: "Real-time pipeline & conversion tracking" },
-    { icon: Target, text: "CRM & API integration" },
-    { icon: TrendingUp, text: "Bulk lead upload (CSV)" },
-  ];
-
-  const collectionFeatures = [
-    { icon: Shield, text: "DPD-bucketed case management" },
-    { icon: Headphones, text: "Omni-channel outreach tools" },
-    { icon: CheckCircle2, text: "Promise-to-pay tracking" },
-    { icon: Phone, text: "Dialer & CRM integration" },
-  ];
-
-  return (
-    <section className="py-28 px-6 relative overflow-hidden" ref={ref}>
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-900 -z-10" />
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-[40rem] h-[40rem] rounded-full bg-indigo-600/10 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-[40rem] h-[40rem] rounded-full bg-amber-500/10 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60rem] h-[20rem] rounded-full bg-primary/5 blur-3xl" />
-      </div>
-
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
-          className="text-center mb-16"
-        >
-          <Badge className="gap-1.5 px-4 py-2 mb-6 bg-white/10 border-white/20 text-white/90 backdrop-blur-sm hover:bg-white/10">
-            <Users className="w-3.5 h-3.5" /> For business partners
-          </Badge>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-5">
-            Partner with{" "}
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Quikkk
-            </span>
-          </h2>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto leading-relaxed">
-            Grow your earnings by sourcing loans, or help recover outstanding dues — two specialised portals built for professionals.
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
-            custom={0.3}
-            className="group relative rounded-3xl p-8 overflow-hidden"
-            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(79,70,229,0.08) 100%)" }}
-          >
-            <div className="absolute inset-0 rounded-3xl border border-indigo-500/30 group-hover:border-indigo-400/60 transition-colors duration-500" />
-            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(79,70,229,0.1) 100%)" }}
-            />
-
-            <div className="relative space-y-6">
-              <motion.div
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30"
-              >
-                <TrendingUp className="w-8 h-8 text-white" />
-              </motion.div>
-
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Channel Partner Portal</h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Source loan leads, track your pipeline, earn commissions on every disbursal. Manage your entire book from one powerful dashboard.
-                </p>
-              </div>
-
-              <ul className="space-y-3">
-                {channelFeatures.map((f, i) => (
-                  <motion.li
-                    key={f.text}
-                    variants={fadeIn}
-                    initial="hidden"
-                    animate={inView ? "visible" : "hidden"}
-                    custom={0.3 + i * 0.15}
-                    className="flex items-center gap-3 text-white/80 text-sm"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
-                      <f.icon className="w-3.5 h-3.5 text-indigo-400" />
-                    </div>
-                    {f.text}
-                  </motion.li>
-                ))}
-              </ul>
-
-              <Link href="/partner/login">
-                <Button className="w-full bg-indigo-600 hover:bg-indigo-500 gap-2 h-12 text-base font-semibold shadow-lg shadow-indigo-600/30 group/btn mt-2">
-                  Channel Partner Login
-                  <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
-            custom={0.5}
-            className="group relative rounded-3xl p-8 overflow-hidden"
-            style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(234,88,12,0.08) 100%)" }}
-          >
-            <div className="absolute inset-0 rounded-3xl border border-amber-500/30 group-hover:border-amber-400/60 transition-colors duration-500" />
-            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(234,88,12,0.1) 100%)" }}
-            />
-
-            <div className="relative space-y-6">
-              <motion.div
-                whileHover={{ scale: 1.05, rotate: -5 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30"
-              >
-                <Phone className="w-8 h-8 text-white" />
-              </motion.div>
-
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Collection Partner Portal</h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Manage delinquent cases, log follow-ups, and track recoveries across all channels. Omni-channel tools including voice, SMS, WhatsApp, and email.
-                </p>
-              </div>
-
-              <ul className="space-y-3">
-                {collectionFeatures.map((f, i) => (
-                  <motion.li
-                    key={f.text}
-                    variants={fadeIn}
-                    initial="hidden"
-                    animate={inView ? "visible" : "hidden"}
-                    custom={0.5 + i * 0.15}
-                    className="flex items-center gap-3 text-white/80 text-sm"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
-                      <f.icon className="w-3.5 h-3.5 text-amber-400" />
-                    </div>
-                    {f.text}
-                  </motion.li>
-                ))}
-              </ul>
-
-              <Link href="/partner/login">
-                <Button className="w-full bg-amber-500 hover:bg-amber-400 gap-2 h-12 text-base font-semibold text-black shadow-lg shadow-amber-500/30 group/btn mt-2">
-                  Collection Partner Login
-                  <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-
-        <motion.p
-          variants={fadeIn}
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
-          custom={1}
-          className="text-center text-xs text-white/40 mt-8"
-        >
-          Admin?{" "}
-          <Link href="/admin/login" className="text-white/60 underline underline-offset-2 hover:text-white/80 transition-colors">
-            Admin login →
-          </Link>
-        </motion.p>
       </div>
     </section>
   );
