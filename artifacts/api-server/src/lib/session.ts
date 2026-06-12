@@ -1,92 +1,82 @@
-import crypto from "node:crypto";
+import { getAuth, createClerkClient } from "@clerk/express";
 import type { Request, Response, NextFunction } from "express";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
-const SECRET = process.env["SESSION_SECRET"] ?? "dev-secret-do-not-use-in-prod";
-const COOKIE_NAME = "cb_session";
-const MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30;
+const clerkBackend = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
 
-function sign(value: string): string {
-  const sig = crypto.createHmac("sha256", SECRET).update(value).digest("base64url");
-  return `${value}.${sig}`;
-}
+async function getOrProvisionDbUser(
+  req: Request,
+): Promise<{ id: number; role: string } | null> {
+  const auth = getAuth(req);
+  const clerkUserId = auth?.userId;
+  if (!clerkUserId) return null;
 
-function verify(signed: string): string | null {
-  const idx = signed.lastIndexOf(".");
-  if (idx < 0) return null;
-  const value = signed.slice(0, idx);
-  const sig = signed.slice(idx + 1);
-  const expected = crypto.createHmac("sha256", SECRET).update(value).digest("base64url");
+  const existing = (
+    await db
+      .select({ id: usersTable.id, role: usersTable.role })
+      .from(usersTable)
+      .where(eq(usersTable.clerkId, clerkUserId))
+      .limit(1)
+  )[0];
+  if (existing) return existing;
+
   try {
-    if (
-      sig.length === expected.length &&
-      crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))
-    ) {
-      return value;
-    }
+    const clerkUser = await clerkBackend.users.getUser(clerkUserId);
+    const email =
+      clerkUser.emailAddresses[0]?.emailAddress ?? null;
+    const name =
+      [clerkUser.firstName, clerkUser.lastName]
+        .filter(Boolean)
+        .join(" ") || null;
+    const phone =
+      clerkUser.phoneNumbers[0]?.phoneNumber ?? null;
+
+    const inserted = await db
+      .insert(usersTable)
+      .values({ clerkId: clerkUserId, phone, email, name })
+      .returning({ id: usersTable.id, role: usersTable.role });
+    return inserted[0] ?? null;
   } catch {
     return null;
   }
-  return null;
 }
 
-export function setSession(res: Response, userId: number): void {
-  const signed = sign(String(userId));
-  res.cookie(COOKIE_NAME, signed, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false,
-    maxAge: MAX_AGE_MS,
-    path: "/",
-  });
-}
-
-export function clearSession(res: Response): void {
-  res.clearCookie(COOKIE_NAME, { path: "/" });
-}
-
-export function getUserId(req: Request): number | null {
-  const raw = (req as unknown as { cookies?: Record<string, string> }).cookies?.[COOKIE_NAME];
-  if (!raw) return null;
-  const value = verify(raw);
-  if (!value) return null;
-  const id = Number(value);
-  return Number.isNaN(id) ? null : id;
-}
-
-export function requireAuth(
+export async function requireAuth(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
-  const userId = getUserId(req);
-  if (!userId) {
+): Promise<void> {
+  const dbUser = await getOrProvisionDbUser(req);
+  if (!dbUser) {
     res.status(401).json({ error: "unauthorized" });
     return;
   }
-  (req as unknown as { userId: number }).userId = userId;
+  (req as unknown as { userId: number }).userId = dbUser.id;
   next();
 }
 
 export function requireRole(...allowed: string[]) {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const userId = getUserId(req);
-    if (!userId) {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    const dbUser = await getOrProvisionDbUser(req);
+    if (!dbUser) {
       res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const { db, usersTable } = await import("@workspace/db");
-    const { eq } = await import("drizzle-orm");
-    const user = (await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1))[0];
-    if (!user) {
-      res.status(401).json({ error: "unauthorized" });
+    if (!allowed.includes(dbUser.role)) {
+      res
+        .status(403)
+        .json({ error: "forbidden", required: allowed, have: dbUser.role });
       return;
     }
-    if (!allowed.includes(user.role)) {
-      res.status(403).json({ error: "forbidden", required: allowed, have: user.role });
-      return;
-    }
-    (req as unknown as { userId: number }).userId = userId;
-    (req as unknown as { userRole: string }).userRole = user.role;
+    (req as unknown as { userId: number }).userId = dbUser.id;
+    (req as unknown as { userRole: string }).userRole = dbUser.role;
     next();
   };
 }

@@ -99,13 +99,13 @@ function Nav() {
           <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/partner/login">
+          <Link href="/sign-in">
             <Button variant="ghost" className="hidden md:inline-flex text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">Partner portal</Button>
           </Link>
-          <Link href="/login">
+          <Link href="/sign-in">
             <Button variant="ghost" className="hidden sm:inline-flex">Sign in</Button>
           </Link>
-          <Link href="/login">
+          <Link href="/sign-in">
             <Button className="gap-1.5">Get started <ArrowRight className="w-4 h-4" /></Button>
           </Link>
         </div>
@@ -185,18 +185,18 @@ function Hero() {
           </motion.p>
 
           <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3} className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Link href="/login">
+            <Link href="/sign-in">
               <Button size="lg" className="gap-2 text-base h-14 px-7 w-full sm:w-auto shadow-lg shadow-primary/20">
                 Check your offers <ArrowRight className="w-4.5 h-4.5" />
               </Button>
             </Link>
-            <Link href="/login">
+            <Link href="/sign-in">
               <Button
                 size="lg"
                 variant="outline"
                 className="gap-2 text-base h-14 px-7 w-full sm:w-auto bg-card/60 backdrop-blur-sm"
               >
-                <Smartphone className="w-4.5 h-4.5" /> Sign in with OTP
+                Sign in
               </Button>
             </Link>
           </motion.div>
@@ -413,7 +413,7 @@ function ProductGrid() {
               animate={inView ? "visible" : "hidden"}
               custom={i * 0.4}
             >
-              <Link href="/login">
+              <Link href="/sign-in">
                 <div
                   className={`group cursor-pointer rounded-3xl p-6 border bg-gradient-to-br ${p.color} hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300`}
                 >
@@ -683,7 +683,7 @@ function CTA() {
             the rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <Link href="/partner/login">
+            <Link href="/sign-in">
               <Button
                 size="lg"
                 variant="outline"
@@ -692,7 +692,7 @@ function CTA() {
                 Partner portal <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <Link href="/partner/login">
+            <Link href="/sign-in">
               <Button
                 size="lg"
                 variant="outline"
@@ -701,7 +701,7 @@ function CTA() {
                 Collections portal <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <Link href="/login">
+            <Link href="/sign-in">
               <Button
                 size="lg"
                 className="bg-white text-black hover:bg-white/90 gap-2 h-14 px-8 text-base font-semibold w-full sm:w-auto"
@@ -739,11 +739,11 @@ function Footer() {
           <FooterCol
             title="Products"
             links={[
-              { label: "Personal loan", href: "/login" },
-              { label: "Home loan", href: "/login" },
-              { label: "Auto loan", href: "/login" },
-              { label: "Business loan", href: "/login" },
-              { label: "Credit cards", href: "/login" },
+              { label: "Personal loan", href: "/sign-in" },
+              { label: "Home loan", href: "/sign-in" },
+              { label: "Auto loan", href: "/sign-in" },
+              { label: "Business loan", href: "/sign-in" },
+              { label: "Credit cards", href: "/sign-in" },
             ]}
           />
           <FooterCol

@@ -496,7 +496,7 @@ export async function seedIfEmpty(): Promise<void> {
   }
 }
 
-async function ensureUser(phone: string, name: string, role: string, partnerCode?: string): Promise<{ id: number; phone: string; name: string | null; role: string }> {
+async function ensureUser(phone: string, name: string, role: string, partnerCode?: string): Promise<{ id: number; phone: string | null; name: string | null; role: string }> {
   let user = (await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1))[0];
   if (!user) {
     user = (await db.insert(usersTable).values({ phone, name, role, partnerCode: partnerCode ?? null }).returning())[0]!;

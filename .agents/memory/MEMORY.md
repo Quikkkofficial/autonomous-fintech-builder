@@ -1,0 +1,1 @@
+- [Clerk auth integration](clerk-auth.md) — Clerk replaces custom OTP auth; DB users JIT-provisioned by clerkId; phone column is nullable.

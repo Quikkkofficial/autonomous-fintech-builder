@@ -1,6 +1,12 @@
+@layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
+
+.cl-formFieldInput::placeholder {
+  color: #9CA3AF;
+  opacity: 1;
+}
 
 @custom-variant dark (&:is(.dark *));
 

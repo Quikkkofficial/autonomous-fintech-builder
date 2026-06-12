@@ -1,4 +1,5 @@
 import React, { createContext, useContext, ReactNode } from "react";
+import { useAuth as useClerkAuth } from "@clerk/react";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import type { User as BaseUser } from "@workspace/api-client-react";
 
@@ -20,10 +21,13 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data: user, isLoading, error } = useGetMe({
+  const { isSignedIn, isLoaded: clerkLoaded } = useClerkAuth();
+
+  const { data: user, isLoading: apiLoading, error } = useGetMe({
     query: {
       queryKey: getGetMeQueryKey(),
       retry: false,
+      enabled: clerkLoaded && !!isSignedIn,
     },
   });
 
@@ -31,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user: (user as AuthUser) || null,
-        isLoading,
+        isLoading: !clerkLoaded || (!!isSignedIn && apiLoading),
         error: error as Error | null,
       }}
     >

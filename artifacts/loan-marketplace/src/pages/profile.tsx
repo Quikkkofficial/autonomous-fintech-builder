@@ -1,29 +1,25 @@
-import { useLocation } from "wouter";
+import { useClerk } from "@clerk/react";
 import { useAuth } from "@/lib/auth";
-import { useGetKyc, useGetCreditScore, useLogout, getGetMeQueryKey, getGetKycQueryKey, getGetCreditScoreQueryKey } from "@workspace/api-client-react";
+import { useGetKyc, useGetCreditScore, getGetKycQueryKey, getGetCreditScoreQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { LogOut, User as UserIcon, Phone, ShieldCheck } from "lucide-react";
+import { LogOut, User as UserIcon, Mail, ShieldCheck } from "lucide-react";
 import { formatINR, statusColor } from "@/lib/format";
 
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 export default function Profile() {
-  const [, setLocation] = useLocation();
+  const { signOut } = useClerk();
   const { user } = useAuth();
   const { data: kyc } = useGetKyc({ query: { queryKey: getGetKycQueryKey(), retry: false } });
   const { data: score } = useGetCreditScore({ query: { queryKey: getGetCreditScoreQueryKey(), retry: false } });
-  const logout = useLogout();
   const qc = useQueryClient();
-  const { toast } = useToast();
 
   async function onLogout() {
-    await logout.mutateAsync();
     qc.clear();
-    await qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
-    toast({ title: "Signed out" });
-    setLocation("/");
+    await signOut({ redirectUrl: basePath || "/" });
   }
 
   return (
@@ -40,8 +36,14 @@ export default function Profile() {
           </div>
           <div className="flex-1">
             <div className="text-xl font-bold">{user?.name || "Welcome"}</div>
-            <div className="text-sm text-muted-foreground flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> +91 {user?.phone}</div>
-            {user?.email && <div className="text-sm text-muted-foreground">{user.email}</div>}
+            {user?.email && (
+              <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" /> {user.email}
+              </div>
+            )}
+            {user?.phone && (
+              <div className="text-sm text-muted-foreground">+91 {user.phone}</div>
+            )}
           </div>
           <Badge className={statusColor(user?.kycStatus ?? "pending")}>KYC: {user?.kycStatus}</Badge>
         </CardContent>

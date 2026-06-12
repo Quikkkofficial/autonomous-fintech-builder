@@ -106,7 +106,7 @@ export default function About() {
         </section>
 
         <section className="text-center">
-          <Link href="/login">
+          <Link href="/sign-in">
             <Button size="lg" className="h-12 px-8">Check your offers now</Button>
           </Link>
         </section>

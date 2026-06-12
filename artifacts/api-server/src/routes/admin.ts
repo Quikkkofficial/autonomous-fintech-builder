@@ -67,7 +67,7 @@ router.get("/admin/users", async (req, res): Promise<void> => {
     const s = search.toLowerCase();
     filtered = rows.filter(
       (u) =>
-        u.phone.toLowerCase().includes(s) ||
+        (u.phone ?? "").toLowerCase().includes(s) ||
         (u.name ?? "").toLowerCase().includes(s) ||
         (u.email ?? "").toLowerCase().includes(s) ||
         (u.partnerCode ?? "").toLowerCase().includes(s),

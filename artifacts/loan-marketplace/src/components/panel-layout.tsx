@@ -1,13 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { useClerk } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLogout, getGetMeQueryKey } from "@workspace/api-client-react";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { roleLabel } from "@/lib/api";
 import type { ReactNode } from "react";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export interface PanelNavItem {
   href: string;
@@ -28,15 +30,14 @@ export function PanelLayout({
   accent?: "red" | "amber" | "indigo";
   children: ReactNode;
 }) {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const { user } = useAuth();
-  const logout = useLogout();
+  const { signOut } = useClerk();
   const queryClient = useQueryClient();
 
   const handleLogout = async () => {
-    try { await logout.mutateAsync(); } catch {}
-    await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-    setLocation("/login");
+    queryClient.clear();
+    await signOut({ redirectUrl: basePath || "/" });
   };
 
   const accentBg = accent === "amber" ? "bg-amber-50" : accent === "indigo" ? "bg-indigo-50" : "bg-primary/5";
@@ -71,7 +72,7 @@ export function PanelLayout({
           <div className="flex items-center gap-3 mb-3">
             <div className="rounded-full bg-primary/10 p-2"><UserIcon className="h-4 w-4 text-primary" /></div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium truncate">{user?.name ?? user?.phone}</div>
+              <div className="text-sm font-medium truncate">{user?.name ?? user?.email}</div>
               <div className="text-xs text-muted-foreground truncate">{roleLabel(user?.role)}{user?.partnerCode ? ` · ${user.partnerCode}` : ""}</div>
             </div>
           </div>
@@ -85,7 +86,7 @@ export function PanelLayout({
           <div className="md:hidden"><Logo size={24} /></div>
           <div className="flex-1" />
           <div className="text-sm text-muted-foreground hidden sm:block">
-            Welcome, <span className="font-medium text-foreground">{user?.name ?? user?.phone}</span>
+            Welcome, <span className="font-medium text-foreground">{user?.name ?? user?.email}</span>
           </div>
         </header>
         <div className="flex-1 p-6 max-w-7xl mx-auto w-full">{children}</div>
