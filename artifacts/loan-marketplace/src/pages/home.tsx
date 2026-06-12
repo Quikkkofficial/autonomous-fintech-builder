@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useInView, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
@@ -29,8 +30,37 @@ import {
   Gem,
   PiggyBank,
   Shield,
+  Banknote,
+  BarChart3,
+  Headphones,
+  Target,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 32 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, delay: i * 0.1, ease: EASE },
+  }),
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    transition: { duration: 0.5, delay: i * 0.08 },
+  }),
+};
+
+function useScrollInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: threshold });
+  return { ref, inView };
+}
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -48,7 +78,6 @@ export default function Home() {
       <ProductGrid />
       <Stats />
       <HowItWorks />
-      <RateComparison />
       <Testimonials />
       <Trust />
       <PartnerPortal />
@@ -67,7 +96,7 @@ function Nav() {
   }, []);
   return (
     <header
-      className={`sticky top-0 z-40 transition-all ${
+      className={`sticky top-0 z-40 transition-all duration-300 ${
         scrolled ? "bg-card/90 backdrop-blur-lg border-b shadow-sm" : "bg-transparent"
       }`}
     >
@@ -78,7 +107,6 @@ function Nav() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
           <a href="#products" className="hover:text-foreground transition-colors">Products</a>
           <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
-          <a href="#rates" className="hover:text-foreground transition-colors">Rates</a>
           <a href="#trust" className="hover:text-foreground transition-colors">Trust & safety</a>
           <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
         </nav>
@@ -102,17 +130,35 @@ function Hero() {
   return (
     <section className="relative pt-16 pb-24 px-6">
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute top-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-accent/5 blur-3xl" />
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/10 blur-3xl"
+        />
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.4, delay: 0.2, ease: "easeOut" }}
+          className="absolute top-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-accent/5 blur-3xl"
+        />
       </div>
 
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-7">
-          <Badge variant="outline" className="gap-1.5 px-3 py-1.5 bg-card/60 backdrop-blur-sm border-primary/30">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs">India's smartest credit marketplace</span>
-          </Badge>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+            <Badge variant="outline" className="gap-1.5 px-3 py-1.5 bg-card/60 backdrop-blur-sm border-primary/30">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs">India's smartest credit marketplace</span>
+            </Badge>
+          </motion.div>
+          <motion.h1
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={1}
+            className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]"
+          >
             Money,{" "}
             <span className="relative inline-block">
               <span className="relative z-10 bg-gradient-to-br from-red-600 to-black bg-clip-text text-transparent">
@@ -124,24 +170,33 @@ function Hero() {
                 viewBox="0 0 200 12"
                 preserveAspectRatio="none"
               >
-                <path
+                <motion.path
                   d="M2 8 Q 50 2 100 6 T 198 4"
                   fill="none"
                   stroke="hsl(var(--primary))"
                   strokeWidth="3"
                   strokeLinecap="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.9, delay: 0.8, ease: "easeOut" }}
                 />
               </svg>
             </span>
             <br />
             in your account.
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
+          </motion.h1>
+          <motion.p
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={2}
+            className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed"
+          >
             Compare loan and credit card offers from <strong className="text-foreground">multiple regulated lenders</strong>{" "}
             in seconds. Get pre-approved offers, lock the best rate, and disburse — all from your phone.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3} className="flex flex-col sm:flex-row gap-3 pt-2">
             <Link href="/login">
               <Button size="lg" className="gap-2 text-base h-14 px-7 w-full sm:w-auto shadow-lg shadow-primary/20">
                 Check your offers <ArrowRight className="w-4.5 h-4.5" />
@@ -156,16 +211,28 @@ function Hero() {
                 <Smartphone className="w-4.5 h-4.5" /> Sign in with OTP
               </Button>
             </Link>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-wrap items-center gap-6 pt-4 text-sm text-muted-foreground">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={4}
+            className="flex flex-wrap items-center gap-6 pt-4 text-sm text-muted-foreground"
+          >
             <span className="flex items-center gap-2"><Lock className="w-4 h-4 text-red-600" /> 256-bit encrypted</span>
             <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-red-600" /> Soft credit pull</span>
             <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-red-600" /> 60-second match</span>
-          </div>
+          </motion.div>
         </div>
 
-        <HeroVisual />
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <HeroVisual />
+        </motion.div>
       </div>
     </section>
   );
@@ -175,7 +242,11 @@ function HeroVisual() {
   return (
     <div className="relative h-[480px] md:h-[540px]">
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-[280px] h-[480px] bg-gradient-to-br from-black to-zinc-800 rounded-[44px] p-3 shadow-2xl shadow-red-600/30 rotate-2">
+        <motion.div
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="relative w-[280px] h-[480px] bg-gradient-to-br from-black to-zinc-800 rounded-[44px] p-3 shadow-2xl shadow-red-600/30 rotate-2"
+        >
           <div className="w-full h-full bg-card rounded-[34px] overflow-hidden flex flex-col">
             <div className="p-5 border-b">
               <Logo size={20} />
@@ -224,20 +295,30 @@ function HeroVisual() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="absolute top-6 -left-2 md:left-4 bg-card border rounded-2xl p-4 shadow-xl flex items-center gap-3 -rotate-6 max-w-[200px]">
-        <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-          <CheckCircle2 className="w-5 h-5 text-red-600" />
+      <motion.div
+        animate={{ rotate: [-6, -4, -6], y: [0, -4, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        className="absolute top-6 -left-2 md:left-4 bg-card border rounded-2xl p-4 shadow-xl max-w-[200px]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <div className="text-xs font-semibold">Approved!</div>
+            <div className="text-[10px] text-muted-foreground">₹3,00,000 disbursed</div>
+          </div>
         </div>
-        <div>
-          <div className="text-xs font-semibold">Approved!</div>
-          <div className="text-[10px] text-muted-foreground">₹3,00,000 disbursed</div>
-        </div>
-      </div>
+      </motion.div>
 
-      <div className="absolute bottom-12 -right-2 md:right-4 bg-card border rounded-2xl p-4 shadow-xl rotate-6 max-w-[200px]">
+      <motion.div
+        animate={{ rotate: [6, 4, 6], y: [0, 4, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-12 -right-2 md:right-4 bg-card border rounded-2xl p-4 shadow-xl max-w-[200px]"
+      >
         <div className="flex items-center gap-2 mb-1.5">
           <TrendingUp className="w-4 h-4 text-primary" />
           <span className="text-xs font-semibold">CIBIL: 782</span>
@@ -247,21 +328,26 @@ function HeroVisual() {
           <div className="h-full w-[88%] bg-gradient-to-r from-amber-400 to-red-600 rounded-full" />
         </div>
         <div className="text-[10px] text-muted-foreground mt-1.5">Free monthly updates</div>
-      </div>
+      </motion.div>
 
-      <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:right-12 bg-gradient-to-br from-black to-red-700 text-white rounded-2xl p-3 shadow-xl rotate-3">
+      <motion.div
+        animate={{ rotate: [3, 5, 3], y: [0, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+        className="absolute top-1/2 -translate-y-1/2 -right-4 md:right-12 bg-gradient-to-br from-black to-red-700 text-white rounded-2xl p-3 shadow-xl"
+      >
         <Zap className="w-5 h-5 mb-1" />
         <div className="text-[10px] font-semibold leading-tight">
           60-sec
           <br />
           match
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
 function SocialProof() {
+  const { ref, inView } = useScrollInView();
   const badges = [
     { icon: ShieldCheck, label: "RBI-Compliant Network" },
     { icon: Lock, label: "ISO 27001 Secured" },
@@ -271,20 +357,29 @@ function SocialProof() {
     { icon: CheckCircle2, label: "Soft Credit Pull" },
   ];
   return (
-    <section className="py-12 border-y bg-muted/30">
+    <section className="py-12 border-y bg-muted/30" ref={ref}>
       <div className="max-w-7xl mx-auto px-6">
-        <p className="text-center text-xs uppercase tracking-widest text-muted-foreground mb-6 font-semibold">
+        <motion.p
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="text-center text-xs uppercase tracking-widest text-muted-foreground mb-6 font-semibold"
+        >
           Built on trust • Powered by regulated lending partners
-        </p>
+        </motion.p>
         <div className="flex flex-wrap justify-center items-center gap-3">
-          {badges.map((b) => (
-            <div
+          {badges.map((b, i) => (
+            <motion.div
               key={b.label}
-              className="flex items-center gap-2 px-4 py-2.5 bg-card border rounded-full text-sm"
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? "visible" : "hidden"}
+              custom={i * 0.5}
+              className="flex items-center gap-2 px-4 py-2.5 bg-card border rounded-full text-sm hover:border-primary/40 hover:shadow-sm transition-all duration-200"
             >
               <b.icon className="w-4 h-4 text-red-600" />
               <span className="font-medium text-foreground/80">{b.label}</span>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -293,6 +388,7 @@ function SocialProof() {
 }
 
 function ProductGrid() {
+  const { ref, inView } = useScrollInView();
   const products = [
     { icon: Landmark, name: "Personal Loan", desc: "₹25K – ₹40L", rate: "from 10.49% p.a.", color: "from-white to-red-50", iconBg: "bg-red-600 text-white" },
     { icon: HomeIcon, name: "Home Loan", desc: "₹5L – ₹5Cr", rate: "from 8.40% p.a.", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
@@ -306,32 +402,45 @@ function ProductGrid() {
     { icon: CreditCard, name: "Credit Cards", desc: "Premium card range", rate: "Lifetime free options", color: "from-white to-zinc-50", iconBg: "bg-black text-white" },
   ];
   return (
-    <section id="products" className="py-24 px-6">
+    <section id="products" className="py-24 px-6" ref={ref}>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="text-center max-w-2xl mx-auto mb-14"
+        >
           <Badge variant="outline" className="mb-4 bg-primary/5 border-primary/20 text-primary">
             One platform, every need
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Pick your product</h2>
           <p className="text-lg text-muted-foreground">Every category. Multiple regulated lenders. One application.</p>
-        </div>
+        </motion.div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {products.map((p) => (
-            <Link key={p.name} href="/login">
-              <div
-                className={`group cursor-pointer rounded-3xl p-6 border bg-gradient-to-br ${p.color} hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
-              >
-                <div className={`w-14 h-14 rounded-2xl ${p.iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
-                  <p.icon className="w-7 h-7" />
+          {products.map((p, i) => (
+            <motion.div
+              key={p.name}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? "visible" : "hidden"}
+              custom={i * 0.4}
+            >
+              <Link href="/login">
+                <div
+                  className={`group cursor-pointer rounded-3xl p-6 border bg-gradient-to-br ${p.color} hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300`}
+                >
+                  <div className={`w-14 h-14 rounded-2xl ${p.iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                    <p.icon className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-1">{p.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{p.desc}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold text-foreground">{p.rate}</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 group-hover:text-primary transition-all duration-200" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-1">{p.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{p.desc}</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-semibold text-foreground">{p.rate}</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 group-hover:text-primary transition-all" />
-                </div>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -339,24 +448,52 @@ function ProductGrid() {
   );
 }
 
+function AnimatedCounter({ to, prefix = "", suffix = "" }: { to: number; prefix?: string; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const motionVal = useMotionValue(0);
+  const spring = useSpring(motionVal, { stiffness: 60, damping: 18 });
+  const inView = useInView(ref, { once: true, amount: 0.5 });
+
+  useEffect(() => {
+    if (inView) motionVal.set(to);
+  }, [inView, motionVal, to]);
+
+  useEffect(() => {
+    return spring.on("change", (v) => {
+      if (ref.current) ref.current.textContent = prefix + Math.round(v).toLocaleString("en-IN") + suffix;
+    });
+  }, [spring, prefix, suffix]);
+
+  return <span ref={ref}>{prefix}0{suffix}</span>;
+}
+
 function Stats() {
+  const { ref, inView } = useScrollInView();
   const stats = [
-    { value: "₹2,400Cr+", label: "Disbursed" },
-    { value: "4.5L+", label: "Happy customers" },
-    { value: "Multi", label: "Lender network" },
-    { value: "60s", label: "Avg. match time" },
+    { value: 2400, prefix: "₹", suffix: "Cr+", label: "Disbursed" },
+    { value: 450000, prefix: "", suffix: "+", label: "Happy customers" },
+    { value: 12, prefix: "", suffix: "+", label: "Lender partners" },
+    { value: 60, prefix: "", suffix: "s", label: "Avg. match time" },
   ];
   return (
-    <section className="py-16 px-6">
+    <section className="py-16 px-6" ref={ref}>
       <div className="max-w-6xl mx-auto bg-gradient-to-br from-black via-zinc-900 to-red-700 rounded-3xl p-10 md:p-14 text-white relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-red-500/20 blur-3xl" />
         <div className="relative grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {stats.map((s) => (
-            <div key={s.label}>
-              <div className="text-4xl md:text-5xl font-bold tracking-tight mb-1.5">{s.value}</div>
+          {stats.map((s, i) => (
+            <motion.div
+              key={s.label}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? "visible" : "hidden"}
+              custom={i * 0.5}
+            >
+              <div className="text-4xl md:text-5xl font-bold tracking-tight mb-1.5">
+                <AnimatedCounter to={s.value} prefix={s.prefix} suffix={s.suffix} />
+              </div>
               <div className="text-sm text-white/70 uppercase tracking-wider">{s.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -365,6 +502,7 @@ function Stats() {
 }
 
 function HowItWorks() {
+  const { ref, inView } = useScrollInView();
   const steps = [
     { num: "01", icon: Smartphone, title: "Sign up in seconds", desc: "Just your phone number and a 6-digit OTP. No paperwork." },
     { num: "02", icon: ShieldCheck, title: "One-time KYC", desc: "Aadhaar + PAN verified instantly. Your data stays encrypted." },
@@ -372,19 +510,31 @@ function HowItWorks() {
     { num: "04", icon: Zap, title: "Apply & disburse", desc: "Pick the best offer and money lands in your account in 24-48 hours." },
   ];
   return (
-    <section id="how" className="py-24 px-6 bg-muted/40">
+    <section id="how" className="py-24 px-6 bg-muted/40" ref={ref}>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="text-center max-w-2xl mx-auto mb-16"
+        >
           <Badge variant="outline" className="mb-4 bg-card border-primary/20 text-primary">How it works</Badge>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">From zero to loan in 4 steps</h2>
           <p className="text-lg text-muted-foreground">No agents. No bank visits. No paperwork chases.</p>
-        </div>
+        </motion.div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((s, i) => (
-            <div key={s.num} className="relative">
-              <div className="bg-card rounded-2xl p-6 border h-full hover:border-primary/40 transition-colors">
-                <div className="text-5xl font-bold text-primary/15 mb-2">{s.num}</div>
-                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+            <motion.div
+              key={s.num}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? "visible" : "hidden"}
+              custom={i * 0.6}
+              className="relative"
+            >
+              <div className="bg-card rounded-2xl p-6 border h-full hover:border-primary/40 hover:shadow-lg transition-all duration-300 group">
+                <div className="text-5xl font-bold text-primary/15 mb-2 group-hover:text-primary/25 transition-colors">{s.num}</div>
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                   <s.icon className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="font-bold text-lg mb-2">{s.title}</h3>
@@ -393,84 +543,16 @@ function HowItWorks() {
               {i < steps.length - 1 && (
                 <ChevronRight className="hidden lg:block absolute top-1/2 -right-3 w-6 h-6 text-primary/40" />
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-function RateComparison() {
-  const rates = [
-    { tier: "Tier A", desc: "Salaried • Top employers", rate: "10.49%", emi: "9,633", badge: "Best rate" },
-    { tier: "Tier B", desc: "Salaried • Listed companies", rate: "10.85%", emi: "9,712" },
-    { tier: "Tier C", desc: "Salaried • SME segment", rate: "11.25%", emi: "9,792" },
-    { tier: "Tier D", desc: "Self-employed • Professional", rate: "11.50%", emi: "9,847" },
-    { tier: "Tier E", desc: "Self-employed • Business owner", rate: "11.99%", emi: "9,962" },
-    { tier: "Tier F", desc: "New to credit", rate: "12.50%", emi: "10,079" },
-  ];
-  return (
-    <section id="rates" className="py-24 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <Badge variant="outline" className="mb-4 bg-accent/10 border-accent/20 text-accent">Indicative rates</Badge>
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">See what you could pay</h2>
-          <p className="text-lg text-muted-foreground">
-            Indicative offers across our regulated partner network for a ₹3 Lakh personal loan over 36 months.
-          </p>
-        </div>
-        <div className="bg-card rounded-3xl border shadow-sm overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-muted/50 border-b text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <div className="col-span-5">Profile</div>
-            <div className="col-span-3">Interest rate</div>
-            <div className="col-span-2">EMI</div>
-            <div className="col-span-2 text-right">Action</div>
-          </div>
-          {rates.map((r, i) => (
-            <div
-              key={r.tier}
-              className={`grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-muted/30 transition-colors ${
-                i < rates.length - 1 ? "border-b" : ""
-              }`}
-            >
-              <div className="col-span-5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-black text-white font-bold flex items-center justify-center text-sm">
-                  {r.tier.split(" ")[1]}
-                </div>
-                <div>
-                  <div className="font-semibold">{r.tier}</div>
-                  <div className="text-xs text-muted-foreground">{r.desc}</div>
-                  {r.badge && (
-                    <Badge className="mt-0.5 bg-red-50 text-red-700 border-red-200 text-[10px]">{r.badge}</Badge>
-                  )}
-                </div>
-              </div>
-              <div className="col-span-3">
-                <div className="text-xl font-bold text-primary">{r.rate}</div>
-                <div className="text-xs text-muted-foreground">per annum</div>
-              </div>
-              <div className="col-span-2">
-                <div className="font-semibold">₹{r.emi}</div>
-                <div className="text-xs text-muted-foreground">monthly</div>
-              </div>
-              <div className="col-span-2 text-right">
-                <Link href="/login">
-                  <Button size="sm" variant="outline">Check</Button>
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Final rates are determined by partner lenders based on your credit profile and underwriting policy.
-        </p>
       </div>
     </section>
   );
 }
 
 function Testimonials() {
+  const { ref, inView } = useScrollInView();
   const reviews = [
     {
       name: "Priya Sharma",
@@ -492,9 +574,14 @@ function Testimonials() {
     },
   ];
   return (
-    <section className="py-24 px-6 bg-muted/40">
+    <section className="py-24 px-6 bg-muted/40" ref={ref}>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="text-center max-w-2xl mx-auto mb-14"
+        >
           <div className="flex items-center justify-center gap-1 mb-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
@@ -502,10 +589,17 @@ function Testimonials() {
             <span className="ml-2 font-semibold text-sm">4.7 / 5 from 12,400 reviews</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Customers love Quikkk</h2>
-        </div>
+        </motion.div>
         <div className="grid md:grid-cols-3 gap-5">
-          {reviews.map((r) => (
-            <div key={r.name} className="bg-card rounded-2xl p-7 border shadow-sm">
+          {reviews.map((r, i) => (
+            <motion.div
+              key={r.name}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? "visible" : "hidden"}
+              custom={i * 0.5}
+              className="bg-card rounded-2xl p-7 border shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+            >
               <div className="flex gap-1 mb-4">
                 {Array.from({ length: r.rating }).map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -521,7 +615,7 @@ function Testimonials() {
                   <div className="text-xs text-muted-foreground">{r.role}</div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -530,6 +624,7 @@ function Testimonials() {
 }
 
 function Trust() {
+  const { ref, inView } = useScrollInView();
   const items = [
     { icon: ShieldCheck, title: "Bank-grade security", desc: "256-bit AES encryption. ISO 27001 certified infrastructure." },
     { icon: Lock, title: "Your data, your control", desc: "We share your details only with lenders you choose. Delete anytime." },
@@ -539,24 +634,36 @@ function Trust() {
     { icon: Clock, title: "24/7 support", desc: "Real humans on chat, WhatsApp, and email. Average reply time: 4 mins." },
   ];
   return (
-    <section id="trust" className="py-24 px-6">
+    <section id="trust" className="py-24 px-6" ref={ref}>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="text-center max-w-2xl mx-auto mb-14"
+        >
           <Badge variant="outline" className="mb-4 bg-primary/5 border-primary/20 text-primary">Built on trust</Badge>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Why people pick Quikkk</h2>
           <p className="text-lg text-muted-foreground">
             We're an aggregator, not a lender. Our incentive is to find <em>you</em> the best deal.
           </p>
-        </div>
+        </motion.div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {items.map((it) => (
-            <div key={it.title} className="bg-card p-7 rounded-2xl border hover:border-primary/30 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+          {items.map((it, i) => (
+            <motion.div
+              key={it.title}
+              variants={fadeUp}
+              initial="hidden"
+              animate={inView ? "visible" : "hidden"}
+              custom={i * 0.4}
+              className="bg-card p-7 rounded-2xl border hover:border-primary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                 <it.icon className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-bold mb-2">{it.title}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">{it.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -565,79 +672,193 @@ function Trust() {
 }
 
 function PartnerPortal() {
+  const { ref, inView } = useScrollInView(0.1);
+
+  const channelFeatures = [
+    { icon: Banknote, text: "Commission on every disbursal" },
+    { icon: BarChart3, text: "Real-time pipeline & conversion tracking" },
+    { icon: Target, text: "CRM & API integration" },
+    { icon: TrendingUp, text: "Bulk lead upload (CSV)" },
+  ];
+
+  const collectionFeatures = [
+    { icon: Shield, text: "DPD-bucketed case management" },
+    { icon: Headphones, text: "Omni-channel outreach tools" },
+    { icon: CheckCircle2, text: "Promise-to-pay tracking" },
+    { icon: Phone, text: "Dialer & CRM integration" },
+  ];
+
   return (
-    <section className="py-20 px-6 bg-gradient-to-br from-indigo-50 to-white">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12">
-          <Badge variant="outline" className="gap-1.5 px-3 py-1.5 mb-4 border-indigo-200 text-indigo-700 bg-indigo-50">
+    <section className="py-28 px-6 relative overflow-hidden" ref={ref}>
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-900 -z-10" />
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-[40rem] h-[40rem] rounded-full bg-indigo-600/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-[40rem] h-[40rem] rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60rem] h-[20rem] rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          className="text-center mb-16"
+        >
+          <Badge className="gap-1.5 px-4 py-2 mb-6 bg-white/10 border-white/20 text-white/90 backdrop-blur-sm hover:bg-white/10">
             <Users className="w-3.5 h-3.5" /> For business partners
           </Badge>
-          <h2 className="text-4xl font-bold tracking-tight">Partner with Quikkk</h2>
-          <p className="text-muted-foreground mt-3 text-lg max-w-xl mx-auto">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-5">
+            Partner with{" "}
+            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Quikkk
+            </span>
+          </h2>
+          <p className="text-white/60 text-lg max-w-2xl mx-auto leading-relaxed">
             Grow your earnings by sourcing loans, or help recover outstanding dues — two specialised portals built for professionals.
           </p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="rounded-3xl border-2 border-indigo-200 bg-white p-8 space-y-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold">Channel Partner Portal</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                Source loan leads, track your pipeline, earn commissions on every disbursal. Bulk upload leads, get API access, and manage your entire book from one dashboard.
-              </p>
-            </div>
-            <ul className="space-y-2 text-sm">
-              {["Commission on every disbursal", "Bulk lead upload (CSV)", "CRM & API integration", "Real-time pipeline tracking"].map((f) => (
-                <li key={f} className="flex items-center gap-2 text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />{f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/partner/login">
-              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 gap-2">
-                Channel Partner Login <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
+        </motion.div>
 
-          <div className="rounded-3xl border-2 border-amber-200 bg-white p-8 space-y-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center">
-              <Phone className="w-6 h-6 text-white" />
+        <div className="grid md:grid-cols-2 gap-6">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate={inView ? "visible" : "hidden"}
+            custom={0.3}
+            className="group relative rounded-3xl p-8 overflow-hidden"
+            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(79,70,229,0.08) 100%)" }}
+          >
+            <div className="absolute inset-0 rounded-3xl border border-indigo-500/30 group-hover:border-indigo-400/60 transition-colors duration-500" />
+            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(79,70,229,0.1) 100%)" }}
+            />
+
+            <div className="relative space-y-6">
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30"
+              >
+                <TrendingUp className="w-8 h-8 text-white" />
+              </motion.div>
+
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2">Channel Partner Portal</h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  Source loan leads, track your pipeline, earn commissions on every disbursal. Manage your entire book from one powerful dashboard.
+                </p>
+              </div>
+
+              <ul className="space-y-3">
+                {channelFeatures.map((f, i) => (
+                  <motion.li
+                    key={f.text}
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate={inView ? "visible" : "hidden"}
+                    custom={0.3 + i * 0.15}
+                    className="flex items-center gap-3 text-white/80 text-sm"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                      <f.icon className="w-3.5 h-3.5 text-indigo-400" />
+                    </div>
+                    {f.text}
+                  </motion.li>
+                ))}
+              </ul>
+
+              <Link href="/partner/login">
+                <Button className="w-full bg-indigo-600 hover:bg-indigo-500 gap-2 h-12 text-base font-semibold shadow-lg shadow-indigo-600/30 group/btn mt-2">
+                  Channel Partner Login
+                  <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </div>
-            <div>
-              <h3 className="text-xl font-bold">Collection Partner Portal</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                Manage delinquent cases, log follow-ups, and track recoveries across all channels. Omni-channel tools including voice, SMS, WhatsApp, and email.
-              </p>
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate={inView ? "visible" : "hidden"}
+            custom={0.5}
+            className="group relative rounded-3xl p-8 overflow-hidden"
+            style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(234,88,12,0.08) 100%)" }}
+          >
+            <div className="absolute inset-0 rounded-3xl border border-amber-500/30 group-hover:border-amber-400/60 transition-colors duration-500" />
+            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(234,88,12,0.1) 100%)" }}
+            />
+
+            <div className="relative space-y-6">
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: -5 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30"
+              >
+                <Phone className="w-8 h-8 text-white" />
+              </motion.div>
+
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2">Collection Partner Portal</h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  Manage delinquent cases, log follow-ups, and track recoveries across all channels. Omni-channel tools including voice, SMS, WhatsApp, and email.
+                </p>
+              </div>
+
+              <ul className="space-y-3">
+                {collectionFeatures.map((f, i) => (
+                  <motion.li
+                    key={f.text}
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate={inView ? "visible" : "hidden"}
+                    custom={0.5 + i * 0.15}
+                    className="flex items-center gap-3 text-white/80 text-sm"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+                      <f.icon className="w-3.5 h-3.5 text-amber-400" />
+                    </div>
+                    {f.text}
+                  </motion.li>
+                ))}
+              </ul>
+
+              <Link href="/partner/login">
+                <Button className="w-full bg-amber-500 hover:bg-amber-400 gap-2 h-12 text-base font-semibold text-black shadow-lg shadow-amber-500/30 group/btn mt-2">
+                  Collection Partner Login
+                  <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </div>
-            <ul className="space-y-2 text-sm">
-              {["DPD-bucketed case management", "Omni-channel outreach tools", "Promise-to-pay tracking", "Dialer & CRM integration"].map((f) => (
-                <li key={f} className="flex items-center gap-2 text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />{f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/partner/login">
-              <Button className="w-full bg-amber-500 hover:bg-amber-600 gap-2 text-white">
-                Collection Partner Login <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
+          </motion.div>
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Admin? <Link href="/admin/login" className="text-foreground underline underline-offset-2">Admin login →</Link>
-        </p>
+
+        <motion.p
+          variants={fadeIn}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+          custom={1}
+          className="text-center text-xs text-white/40 mt-8"
+        >
+          Admin?{" "}
+          <Link href="/admin/login" className="text-white/60 underline underline-offset-2 hover:text-white/80 transition-colors">
+            Admin login →
+          </Link>
+        </motion.p>
       </div>
     </section>
   );
 }
 
 function CTA() {
+  const { ref, inView } = useScrollInView();
   return (
-    <section className="py-20 px-6">
-      <div className="max-w-5xl mx-auto bg-gradient-to-br from-black via-zinc-900 to-red-700 rounded-[2.5rem] p-12 md:p-16 text-white relative overflow-hidden">
+    <section className="py-20 px-6" ref={ref}>
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate={inView ? "visible" : "hidden"}
+        className="max-w-5xl mx-auto bg-gradient-to-br from-black via-zinc-900 to-red-700 rounded-[2.5rem] p-12 md:p-16 text-white relative overflow-hidden"
+      >
         <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/20 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         <div className="relative text-center max-w-2xl mx-auto space-y-6">
@@ -681,7 +902,7 @@ function CTA() {
           </div>
           <p className="text-xs text-white/60 pt-3">Free • Soft credit pull • Won't impact your score</p>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
