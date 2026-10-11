@@ -1,1 +1,16 @@
-{"$schema":"https://openapi.vercel.sh/vercel.json","buildCommand":"pnpm --filter @workspace/loan-marketplace build && pnpm --filter @workspace/api-server build","installCommand":"pnpm install","outputDirectory":"artifacts/loan-marketplace/dist/public","rewrites":[{"destination":"/api","source":"/api/:path*"},{"destination":"/index.html","source":"/(.*)"}]}
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @workspace/loan-marketplace build && pnpm --filter @workspace/api-server build",
+  "installCommand": "pnpm install",
+  "outputDirectory": "artifacts/loan-marketplace/dist/public",
+  "rewrites": [
+    {
+      "destination": "/api/:path*",
+      "source": "/api/:path*"
+    },
+    {
+      "destination": "/index.html",
+      "source": "/(.*)"
+    }
+  ]
+}

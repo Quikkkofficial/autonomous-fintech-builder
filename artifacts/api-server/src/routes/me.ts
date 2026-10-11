@@ -28,7 +28,9 @@ router.get("/me", requireAuth, async (req, res) => {
 router.post("/me/role", requireAuth, async (req, res) => {
   const userId = (req as unknown as { userId: number }).userId;
   const { role } = req.body ?? {};
-  const validRoles = ["customer", "admin", "sales_partner", "collection_partner"];
+  // SECURITY: Users cannot self-assign admin role. Only customer/partner roles allowed via self-service.
+  // Admin role must be assigned by an existing admin via /admin/users/:id
+  const validRoles = ["customer", "sales_partner", "collection_partner"];
   if (!validRoles.includes(role)) {
     res.status(400).json({ error: "invalid_role" });
     return;

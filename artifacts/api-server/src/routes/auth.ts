@@ -89,7 +89,11 @@ router.post("/auth/session", async (req: Request, res: Response) => {
     return;
   }
 
-  const phone = verified.phoneNumber!;
+  const phone = verified.phoneNumber;
+  if (!phone) {
+    res.status(400).json({ error: "phone_number_required" });
+    return;
+  }
   const now = new Date();
 
   // Find-or-create user by phone.
