@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Layout } from "@/components/layout";
+import { SeoHead } from "@/components/seo";
 import { ArrowLeft } from "lucide-react";
 
 import Home from "@/pages/home";
@@ -303,6 +304,7 @@ function ClerkProviderWithRoutes() {
 function App() {
   return (
     <WouterRouter base={basePath}>
+      <SeoHead />
       <ClerkProviderWithRoutes />
     </WouterRouter>
   );

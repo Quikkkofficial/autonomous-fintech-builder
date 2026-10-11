@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Auth-gated application areas — no public content, keep out of the index
+Disallow: /dashboard
+Disallow: /kyc
+Disallow: /loans
+Disallow: /lenders
+Disallow: /applications
+Disallow: /credit-cards
+Disallow: /tools/
+Disallow: /notifications
+Disallow: /profile
+Disallow: /admin/
+Disallow: /partner/
+Disallow: /collection/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /login
+
+Sitemap: https://quikkk.com/sitemap.xml

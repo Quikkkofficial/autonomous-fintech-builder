@@ -49,7 +49,7 @@ export default function Loans() {
         <p className="text-muted-foreground mt-1">Compare offers from 12+ banks & NBFCs in seconds.</p>
       </div>
       <div className="md:hidden">
-        <h1 className="text-xl font-bold tracking-tight">Find a loan</h1>
+        <p className="text-xl font-bold tracking-tight">Find a loan</p>
         <p className="text-muted-foreground text-sm mt-0.5">Compare 12+ banks & NBFCs instantly.</p>
       </div>
 
