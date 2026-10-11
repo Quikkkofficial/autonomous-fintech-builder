@@ -209,3 +209,90 @@ export const partnerPayoutsTable = pgTable("partner_payouts", {
   paidAt: timestamp("paid_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+/* ---------- Bharat UPI (Cashfree PG) ---------- */
+
+export const upiTransactionsTable = pgTable("upi_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  applicationId: varchar("application_id", { length: 50 }),
+  // Our reference (generated) + Cashfree's order id
+  reference: varchar("reference", { length: 50 }).notNull().unique(),
+  cfOrderId: varchar("cf_order_id", { length: 100 }),
+  cfPaymentId: varchar("cf_payment_id", { length: 100 }),
+  amount: numeric("amount").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("INR"),
+  // emi | processing_fee | platform_fee | other
+  purpose: varchar("purpose", { length: 30 }).notNull(),
+  // created | pending | success | failed | cancelled | refunded
+  status: varchar("status", { length: 20 }).notNull().default("created"),
+  // upi_collect | upi_qr | upi_intent | autopay
+  method: varchar("method", { length: 20 }),
+  upiId: varchar("upi_id", { length: 100 }),
+  paymentSessionId: varchar("payment_session_id", { length: 200 }),
+  paymentLink: text("payment_link"),
+  upiQrString: text("upi_qr_string"),
+  // NPCI MDR bucket for post-Oct-2026 accounting (standard_p2m | essential_flat5 | capital_market | exempt)
+  mdrBucket: varchar("mdr_bucket", { length: 30 }),
+  failureReason: text("failure_reason"),
+  webhookPayload: jsonb("webhook_payload").$type<Record<string, unknown>>(),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const upiAutopayMandatesTable = pgTable("upi_autopay_mandates", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  applicationId: varchar("application_id", { length: 50 }),
+  reference: varchar("reference", { length: 50 }).notNull().unique(),
+  cfSubscriptionId: varchar("cf_subscription_id", { length: 100 }),
+  // Amount per debit (EMI amount)
+  amount: numeric("amount").notNull(),
+  // Max authorizable amount (allows small variations)
+  maxAmount: numeric("max_amount").notNull(),
+  // MONTHLY | WEEKLY | FORTNIGHTLY | ON_DEMAND
+  frequency: varchar("frequency", { length: 20 }).notNull().default("MONTHLY"),
+  totalDebits: integer("total_debits"),
+  debitsExecuted: integer("debits_executed").notNull().default(0),
+  // created | pending_auth | active | paused | cancelled | expired | failed
+  status: varchar("status", { length: 20 }).notNull().default("created"),
+  upiId: varchar("upi_id", { length: 100 }),
+  authLink: text("auth_link"),
+  startDate: timestamp("start_date", { withTimezone: true }),
+  endDate: timestamp("end_date", { withTimezone: true }),
+  nextDebitAt: timestamp("next_debit_at", { withTimezone: true }),
+  lastDebitAt: timestamp("last_debit_at", { withTimezone: true }),
+  lastDebitStatus: varchar("last_debit_status", { length: 20 }),
+  failureReason: text("failure_reason"),
+  webhookPayload: jsonb("webhook_payload").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const upiPayoutsTable = pgTable("upi_payouts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  applicationId: varchar("application_id", { length: 50 }),
+  reference: varchar("reference", { length: 50 }).notNull().unique(),
+  cfTransferId: varchar("cf_transfer_id", { length: 100 }),
+  cfBatchId: varchar("cf_batch_id", { length: 100 }),
+  amount: numeric("amount").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("INR"),
+  // upi | bank_account
+  mode: varchar("mode", { length: 20 }).notNull().default("upi"),
+  beneficiaryUpiId: varchar("beneficiary_upi_id", { length: 100 }),
+  beneficiaryAccount: varchar("beneficiary_account", { length: 30 }),
+  beneficiaryIfsc: varchar("beneficiary_ifsc", { length: 20 }),
+  beneficiaryName: varchar("beneficiary_name", { length: 200 }),
+  // disbursal | commission | refund
+  purpose: varchar("purpose", { length: 30 }).notNull(),
+  // created | pending | success | failed | reversed
+  status: varchar("status", { length: 20 }).notNull().default("created"),
+  utr: varchar("utr", { length: 50 }),
+  failureReason: text("failure_reason"),
+  webhookPayload: jsonb("webhook_payload").$type<Record<string, unknown>>(),
+  processedAt: timestamp("processed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});

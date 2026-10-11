@@ -30,6 +30,8 @@ import {
   Gem,
   PiggyBank,
   Shield,
+  Menu,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -75,42 +77,128 @@ export default function Home() {
   );
 }
 
+const mobileNavLinks = [
+  { href: "#products", label: "Products", anchor: true },
+  { href: "#how", label: "How it works", anchor: true },
+  { href: "#trust", label: "Trust & safety", anchor: true },
+  { href: "/about", label: "About", anchor: false },
+  { href: "/sign-in", label: "Partner portal", anchor: false },
+  { href: "/sign-in", label: "Sign in", anchor: false },
+];
+
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
   return (
-    <header
-      className={`sticky top-0 z-40 transition-all duration-300 ${
-        scrolled ? "bg-card/90 backdrop-blur-lg border-b shadow-sm" : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/">
-          <Logo size={22} />
-        </Link>
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <a href="#products" className="hover:text-foreground transition-colors">Products</a>
-          <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
-          <a href="#trust" className="hover:text-foreground transition-colors">Trust & safety</a>
-          <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-        </nav>
-        <div className="flex items-center gap-2">
-          <Link href="/sign-in">
-            <Button variant="ghost" className="hidden md:inline-flex text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">Partner portal</Button>
+    <>
+      <header
+        className={`sticky top-0 z-40 transition-all duration-300 ${
+          scrolled ? "bg-card/90 backdrop-blur-lg border-b shadow-sm" : "bg-transparent"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/">
+            <Logo size={22} />
           </Link>
-          <Link href="/sign-in">
-            <Button variant="ghost" className="hidden sm:inline-flex">Sign in</Button>
-          </Link>
-          <Link href="/sign-in">
-            <Button className="gap-1.5">Get started <ArrowRight className="w-4 h-4" /></Button>
-          </Link>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+            <a href="#products" className="hover:text-foreground transition-colors">Products</a>
+            <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
+            <a href="#trust" className="hover:text-foreground transition-colors">Trust & safety</a>
+            <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link href="/sign-in">
+              <Button variant="ghost" className="hidden md:inline-flex text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">Partner portal</Button>
+            </Link>
+            <Link href="/sign-in">
+              <Button variant="ghost" className="hidden sm:inline-flex">Sign in</Button>
+            </Link>
+            <Link href="/sign-in">
+              <Button className="gap-1.5">Get started <ArrowRight className="w-4 h-4" /></Button>
+            </Link>
+            <button
+              type="button"
+              aria-label={drawerOpen ? "Close menu" : "Open menu"}
+              onClick={() => setDrawerOpen((v) => !v)}
+              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-muted transition-colors"
+            >
+              {drawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+      </header>
+
+      {/* Mobile drawer */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden ${drawerOpen ? "" : "pointer-events-none"}`}
+        aria-hidden={!drawerOpen}
+      >
+        <div
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
+            drawerOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setDrawerOpen(false)}
+        />
+        <aside
+          className={`absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-card shadow-xl flex flex-col transition-transform duration-300 ease-out ${
+            drawerOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex items-center justify-between p-4 border-b">
+            <Logo size={20} />
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setDrawerOpen(false)}
+              className="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-muted transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+            {mobileNavLinks.map((link) =>
+              link.anchor ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setDrawerOpen(false)}
+                  className="block px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link key={link.label} href={link.href}>
+                  <span
+                    onClick={() => setDrawerOpen(false)}
+                    className="block px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    {link.label}
+                  </span>
+                </Link>
+              )
+            )}
+          </nav>
+          <div className="p-4 border-t">
+            <Link href="/sign-in">
+              <Button className="w-full gap-1.5" onClick={() => setDrawerOpen(false)}>
+                Get started <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </aside>
       </div>
-    </header>
+    </>
   );
 }
 
@@ -477,7 +565,7 @@ function Stats() {
               animate={inView ? "visible" : "hidden"}
               custom={i * 0.5}
             >
-              <div className="text-4xl md:text-5xl font-bold tracking-tight mb-1.5">
+              <div className="text-3xl md:text-5xl font-bold tracking-tight mb-1.5 break-words">
                 <AnimatedCounter to={s.value} prefix={s.prefix} suffix={s.suffix} />
               </div>
               <div className="text-sm text-white/70 uppercase tracking-wider">{s.label}</div>
