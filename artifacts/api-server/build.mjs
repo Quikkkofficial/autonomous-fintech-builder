@@ -14,13 +14,11 @@ async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
-  await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+  // Options shared by both bundles below.
+  const shared = {
     platform: "node",
     bundle: true,
     format: "esm",
-    outdir: distDir,
-    outExtension: { ".js": ".mjs" },
     logLevel: "info",
     // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
     // Some of the packages below may not be imported or installed, but we're adding them in case they are in the future.
@@ -117,6 +115,25 @@ globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
 globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
+  };
+
+  // 1. Long-running Node server (Replit): src/index.ts -> dist/index.mjs
+  await esbuild({
+    ...shared,
+    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    outdir: distDir,
+    outExtension: { ".js": ".mjs" },
+  });
+
+  // 2. Vercel serverless function: src/app.ts (Express app, no .listen())
+  //    bundled to a single self-contained file so the serverless function
+  //    needs no workspace source files at runtime. (outdir, not outfile:
+  //    esbuild-plugin-pino adds worker entry points, which requires outdir.)
+  await esbuild({
+    ...shared,
+    entryPoints: [path.resolve(artifactDir, "src/app.ts")],
+    outdir: distDir,
+    outExtension: { ".js": ".mjs" },
   });
 }
 
