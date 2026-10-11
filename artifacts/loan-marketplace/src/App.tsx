@@ -19,6 +19,7 @@ import CreditCards from "@/pages/credit-cards";
 import EmiCalculator from "@/pages/emi-calculator";
 import Notifications from "@/pages/notifications";
 import Profile from "@/pages/profile";
+import Payments from "@/pages/payments";
 import About from "@/pages/about";
 import Terms from "@/pages/terms";
 import SignIn from "@/pages/sign-in";
@@ -93,6 +94,7 @@ function Router() {
       <Route path="/tools/emi"><P><EmiCalculator /></P></Route>
       <Route path="/notifications"><P><Notifications /></P></Route>
       <Route path="/profile"><P><Profile /></P></Route>
+      <Route path="/payments"><P><Payments /></P></Route>
 
       <Route path="/admin"><AP><AdminOverview /></AP></Route>
       <Route path="/admin/users"><AP><AdminUsers /></AP></Route>

@@ -12,6 +12,7 @@ import {
   TrendingUp,
   ChevronRight,
   CircleDollarSign,
+  Wallet,
   Activity,
   Calculator,
 } from "lucide-react";
@@ -52,6 +53,7 @@ export default function Dashboard() {
     { label: "Credit Cards", icon: CreditCard, href: "/credit-cards", color: "bg-blue-50 text-blue-600" },
     { label: "Applications", icon: FileText, href: "/applications", color: "bg-violet-50 text-violet-600" },
     { label: "EMI Calc", icon: Calculator, href: "/tools/emi", color: "bg-emerald-50 text-emerald-600" },
+    { label: "Payments", icon: Wallet, href: "/payments", color: "bg-amber-50 text-amber-600" },
   ];
 
   if (loadingSummary || loadingScore || loadingApps) {

@@ -29,7 +29,15 @@ app.use(
 
 app.use(cors({ credentials: true, origin: true }));
 app.use(cookieParser());
-app.use(express.json());
+// Capture the raw body so HMAC-signed webhooks (e.g. Cashfree UPI)
+// can be verified with timing-safe comparison.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      (req as unknown as { rawBody?: string }).rawBody = buf.toString("utf8");
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
