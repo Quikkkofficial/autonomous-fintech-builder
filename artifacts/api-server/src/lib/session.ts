@@ -1,47 +1,110 @@
-import { getAuth, createClerkClient } from "@clerk/express";
+/**
+ * Cookie-session auth (replaces Clerk).
+ *
+ * - Sessions are 256-bit opaque tokens (crypto.randomBytes); only the
+ *   sha256 hash is stored in the `sessions` table.
+ * - The token travels in an httpOnly, Secure, SameSite=Lax cookie
+ *   named `quikkk_session`.
+ * - 30-day expiry with sliding refresh on each authenticated request.
+ */
+import { randomBytes, createHash } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
-import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, usersTable, sessionsTable } from "@workspace/db";
+import { and, eq, gt } from "drizzle-orm";
 
-const clerkBackend = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY,
-});
+export const SESSION_COOKIE_NAME = "quikkk_session";
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-async function getOrProvisionDbUser(
-  req: Request,
-): Promise<{ id: number; role: string } | null> {
-  const auth = getAuth(req);
-  const clerkUserId = auth?.userId;
-  if (!clerkUserId) return null;
+export function hashSessionToken(token: string): string {
+  return createHash("sha256").update(token, "utf8").digest("hex");
+}
 
-  const existing = (
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_TTL_MS,
+  };
+}
+
+export interface SessionRecord {
+  tokenHash: string;
+  userId: number;
+  role: string;
+}
+
+/** Create a session row + return the raw token (to be set as a cookie). */
+export async function createSession(
+  userId: number,
+  opts: { userAgent?: string; ip?: string } = {},
+): Promise<string> {
+  const token = randomBytes(32).toString("hex"); // 256-bit
+  const tokenHash = hashSessionToken(token);
+  await db.insert(sessionsTable).values({
+    userId,
+    tokenHash,
+    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    userAgent: opts.userAgent?.slice(0, 300) ?? null,
+    ip: opts.ip?.slice(0, 45) ?? null,
+  });
+  return token;
+}
+
+/** Look up a session by raw token; returns null if missing/expired. */
+export async function getSession(
+  token: string | undefined,
+): Promise<SessionRecord | null> {
+  if (!token || typeof token !== "string" || token.length > 128) return null;
+  const tokenHash = hashSessionToken(token);
+  const row = (
     await db
-      .select({ id: usersTable.id, role: usersTable.role })
-      .from(usersTable)
-      .where(eq(usersTable.clerkId, clerkUserId))
+      .select({
+        tokenHash: sessionsTable.tokenHash,
+        userId: sessionsTable.userId,
+        role: usersTable.role,
+        expiresAt: sessionsTable.expiresAt,
+      })
+      .from(sessionsTable)
+      .innerJoin(usersTable, eq(sessionsTable.userId, usersTable.id))
+      .where(
+        and(
+          eq(sessionsTable.tokenHash, tokenHash),
+          gt(sessionsTable.expiresAt, new Date()),
+        ),
+      )
       .limit(1)
   )[0];
-  if (existing) return existing;
+  if (!row) return null;
 
-  try {
-    const clerkUser = await clerkBackend.users.getUser(clerkUserId);
-    const email =
-      clerkUser.emailAddresses[0]?.emailAddress ?? null;
-    const name =
-      [clerkUser.firstName, clerkUser.lastName]
-        .filter(Boolean)
-        .join(" ") || null;
-    const phone =
-      clerkUser.phoneNumbers[0]?.phoneNumber ?? null;
+  // Sliding refresh: extend expiry on activity (best-effort, don't fail the request).
+  db.update(sessionsTable)
+    .set({ expiresAt: new Date(Date.now() + SESSION_TTL_MS) })
+    .where(eq(sessionsTable.tokenHash, tokenHash))
+    .catch(() => {});
+  return { tokenHash: row.tokenHash, userId: row.userId, role: row.role };
+}
 
-    const inserted = await db
-      .insert(usersTable)
-      .values({ clerkId: clerkUserId, phone, email, name })
-      .returning({ id: usersTable.id, role: usersTable.role });
-    return inserted[0] ?? null;
-  } catch {
-    return null;
-  }
+/** Delete a session by raw token. */
+export async function destroySession(token: string | undefined): Promise<void> {
+  if (!token || typeof token !== "string") return;
+  await db
+    .delete(sessionsTable)
+    .where(eq(sessionsTable.tokenHash, hashSessionToken(token)));
+}
+
+export function setSessionCookie(res: Response, token: string): void {
+  res.cookie(SESSION_COOKIE_NAME, token, sessionCookieOptions());
+}
+
+export function clearSessionCookie(res: Response): void {
+  res.clearCookie(SESSION_COOKIE_NAME, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+  });
 }
 
 export async function requireAuth(
@@ -49,12 +112,13 @@ export async function requireAuth(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const dbUser = await getOrProvisionDbUser(req);
-  if (!dbUser) {
+  const session = await getSession(req.cookies?.[SESSION_COOKIE_NAME]);
+  if (!session) {
     res.status(401).json({ error: "unauthorized" });
     return;
   }
-  (req as unknown as { userId: number }).userId = dbUser.id;
+  (req as unknown as { userId: number }).userId = session.userId;
+  (req as unknown as { userRole: string }).userRole = session.role;
   next();
 }
 
@@ -64,19 +128,19 @@ export function requireRole(...allowed: string[]) {
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    const dbUser = await getOrProvisionDbUser(req);
-    if (!dbUser) {
+    const session = await getSession(req.cookies?.[SESSION_COOKIE_NAME]);
+    if (!session) {
       res.status(401).json({ error: "unauthorized" });
       return;
     }
-    if (!allowed.includes(dbUser.role)) {
+    if (!allowed.includes(session.role)) {
       res
         .status(403)
-        .json({ error: "forbidden", required: allowed, have: dbUser.role });
+        .json({ error: "forbidden", required: allowed, have: session.role });
       return;
     }
-    (req as unknown as { userId: number }).userId = dbUser.id;
-    (req as unknown as { userRole: string }).userRole = dbUser.role;
+    (req as unknown as { userId: number }).userId = session.userId;
+    (req as unknown as { userRole: string }).userRole = session.role;
     next();
   };
 }

@@ -1,4 +1,3 @@
-import { useClerk } from "@clerk/react";
 import { useAuth } from "@/lib/auth";
 import { useGetKyc, useGetCreditScore, getGetKycQueryKey, getGetCreditScoreQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,18 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { LogOut, User as UserIcon, Mail, ShieldCheck } from "lucide-react";
 import { formatINR, statusColor } from "@/lib/format";
 
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-
 export default function Profile() {
-  const { signOut } = useClerk();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { data: kyc } = useGetKyc({ query: { queryKey: getGetKycQueryKey(), retry: false } });
   const { data: score } = useGetCreditScore({ query: { queryKey: getGetCreditScoreQueryKey(), retry: false } });
   const qc = useQueryClient();
 
   async function onLogout() {
     qc.clear();
-    await signOut({ redirectUrl: basePath || "/" });
+    await signOut();
   }
 
   return (

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, ReactNode } from "react";
-import { useAuth as useClerkAuth } from "@clerk/react";
-import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { api } from "@/lib/api";
 import type { User as BaseUser } from "@workspace/api-client-react";
 
 export type AuthUser = BaseUser & {
@@ -12,33 +13,63 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   error: Error | null;
+  signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   error: null,
+  signOut: async () => {},
+  refresh: async () => {},
 });
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { isSignedIn, isLoaded: clerkLoaded } = useClerkAuth();
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  const { data: user, isLoading: apiLoading, error } = useGetMe({
-    query: {
-      queryKey: getGetMeQueryKey(),
-      retry: false,
-      enabled: clerkLoaded && !!isSignedIn,
-    },
-  });
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const me = await api<AuthUser>("/me");
+      setUser(me);
+    } catch (e: any) {
+      // 401 = not signed in; anything else is a real error
+      if (e?.status === 401 || /401/.test(String(e?.message))) {
+        setUser(null);
+      } else {
+        setError(e instanceof Error ? e : new Error(String(e)));
+        setUser(null);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const signOut = useCallback(async () => {
+    try {
+      await api("/auth/logout", { method: "POST" });
+    } catch {
+      // logout best-effort; still clear local state
+    }
+    queryClient.clear();
+    setUser(null);
+    setLocation(`${basePath}/` || "/");
+  }, [queryClient, setLocation]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user: (user as AuthUser) || null,
-        isLoading: !clerkLoaded || (!!isSignedIn && apiLoading),
-        error: error as Error | null,
-      }}
-    >
+    <AuthContext.Provider value={{ user, isLoading, error, signOut, refresh }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,3 @@
-import { useAuth as useClerkAuth } from "@clerk/react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
@@ -12,23 +11,21 @@ export function ProtectedRoute({
   children: React.ReactNode;
   allowedRoles?: Array<string>;
 }) {
-  const { isSignedIn, isLoaded: clerkLoaded } = useClerkAuth();
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!clerkLoaded) return;
-    if (!isSignedIn) {
+    if (isLoading) return;
+    if (!user) {
       setLocation("/sign-in");
       return;
     }
-    if (isLoading) return;
-    if (allowedRoles && user && !allowedRoles.includes(user.role ?? "customer")) {
+    if (allowedRoles && !allowedRoles.includes(user.role ?? "customer")) {
       setLocation(roleHomePath(user.role));
     }
-  }, [clerkLoaded, isSignedIn, user, isLoading, setLocation, allowedRoles]);
+  }, [user, isLoading, setLocation, allowedRoles]);
 
-  if (!clerkLoaded || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -36,8 +33,8 @@ export function ProtectedRoute({
     );
   }
 
-  if (!isSignedIn) return null;
-  if (allowedRoles && user && !allowedRoles.includes(user.role ?? "customer")) return null;
+  if (!user) return null;
+  if (allowedRoles && !allowedRoles.includes(user.role ?? "customer")) return null;
 
   return <>{children}</>;
 }

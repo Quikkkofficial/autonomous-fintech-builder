@@ -13,6 +13,7 @@ import {
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   clerkId: varchar("clerk_id", { length: 256 }).unique(),
+  firebaseUid: varchar("firebase_uid", { length: 128 }).unique(),
   phone: varchar("phone", { length: 20 }).unique(),
   name: varchar("name", { length: 200 }),
   email: varchar("email", { length: 200 }),
@@ -20,14 +21,30 @@ export const usersTable = pgTable("users", {
   partnerCode: varchar("partner_code", { length: 30 }),
   kycStatus: varchar("kyc_status", { length: 20 }).notNull().default("pending"),
   panMasked: varchar("pan_masked", { length: 20 }),
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  phoneVerifiedAt: timestamp("phone_verified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const otpsTable = pgTable("otps", {
   id: serial("id").primaryKey(),
-  phone: varchar("phone", { length: 20 }).notNull(),
-  code: varchar("code", { length: 10 }).notNull(),
+  identifier: varchar("identifier", { length: 200 }).notNull(),
+  channel: varchar("channel", { length: 10 }).notNull(),
+  purpose: varchar("purpose", { length: 20 }).notNull(),
+  codeHash: varchar("code_hash", { length: 64 }).notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  usedAt: timestamp("used_at", { withTimezone: true }),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const sessionsTable = pgTable("sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  userAgent: varchar("user_agent", { length: 300 }),
+  ip: varchar("ip", { length: 45 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

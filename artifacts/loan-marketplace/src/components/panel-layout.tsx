@@ -1,6 +1,5 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { useClerk } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
@@ -8,8 +7,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { roleLabel } from "@/lib/api";
 import type { ReactNode } from "react";
-
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export interface PanelNavItem {
   href: string;
@@ -31,13 +28,12 @@ export function PanelLayout({
   children: ReactNode;
 }) {
   const [location] = useLocation();
-  const { user } = useAuth();
-  const { signOut } = useClerk();
+  const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     queryClient.clear();
-    await signOut({ redirectUrl: basePath || "/" });
+    await signOut();
   };
 
   const accentBg = accent === "amber" ? "bg-amber-50" : accent === "indigo" ? "bg-indigo-50" : "bg-primary/5";
