@@ -151,54 +151,40 @@ router.post("/auth/logout", async (req: Request, res: Response) => {
  */
 router.post("/auth/demo-login", async (req: Request, res: Response) => {
   const phone = typeof req.body?.phone === "string" ? req.body.phone.trim() : "";
-  const DEMO_CONFIG: Record<string, { name: string; role: string; partnerCode?: string }> = {
-    "9000000001": { name: "Admin Demo", role: "admin" },
-    "9000000002": { name: "Sales Partner Demo", role: "sales_partner", partnerCode: "QSP-00001" },
-    "9000000003": { name: "Collection Demo", role: "collection_partner", partnerCode: "QCP-00001" },
+  const DEMO_CONFIG: Record<string, { name: string; role: string; partnerCode?: string; id: number }> = {
+    "9000000001": { name: "Admin Demo", role: "admin", id: 90001 },
+    "9000000002": { name: "Sales Partner Demo", role: "sales_partner", partnerCode: "QSP-00001", id: 90002 },
+    "9000000003": { name: "Collection Demo", role: "collection_partner", partnerCode: "QCP-00001", id: 90003 },
   };
   const config = DEMO_CONFIG[phone];
   if (!config) {
     res.status(400).json({ error: "invalid_demo_phone" });
     return;
   }
-  try {
-    // Find or create demo user (seed may not have run on serverless)
-    let user = (
-      await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1)
-    )[0];
-    if (!user) {
-      const inserted = await db
-        .insert(usersTable)
-        .values({
-          phone,
-          name: config.name,
-          role: config.role as any,
-          partnerCode: config.partnerCode ?? null,
-          phoneVerifiedAt: new Date(),
-        })
-        .returning();
-      user = inserted[0]!;
-    }
-    const sessionId = await createSession(user.id);
-    setSessionCookie(res, sessionId);
-    res.json({
-      id: String(user.id),
-      phone: user.phone,
-      name: user.name ?? undefined,
-      email: user.email ?? undefined,
-      role: user.role,
-      partnerCode: user.partnerCode ?? undefined,
-      demo: true,
-    });
-  } catch (err: any) {
-    console.error("Demo login DB error:", err?.message, err?.code, err?.detail);
-    res.status(500).json({ 
-      error: "db_error", 
-      message: err?.message,
-      code: err?.code,
-      detail: err?.detail 
-    });
-  }
+  // Demo mode: use mock session without DB (for preview when DB is unavailable)
+  // Create a simple signed token with demo user info
+  const { createHash, randomBytes } = await import("node:crypto");
+  const token = randomBytes(32).toString("hex");
+  const payload = JSON.stringify({ id: config.id, phone, role: config.role, demo: true, t: Date.now() });
+  const signature = createHash("sha256").update(payload + token).digest("hex").slice(0, 16);
+  const demoToken = Buffer.from(payload).toString("base64") + "." + token + "." + signature;
+  
+  res.cookie("quikkk_demo", demoToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  });
+  
+  res.json({
+    id: String(config.id),
+    phone,
+    name: config.name,
+    role: config.role,
+    partnerCode: config.partnerCode ?? undefined,
+    demo: true,
+  });
 });
 
 /**

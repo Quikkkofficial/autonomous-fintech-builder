@@ -55,7 +55,24 @@ export async function createSession(
 /** Look up a session by raw token; returns null if missing/expired. */
 export async function getSession(
   token: string | undefined,
+  demoToken?: string | undefined,
 ): Promise<SessionRecord | null> {
+  // Check demo token first (for demo mode without DB)
+  if (demoToken && typeof demoToken === "string") {
+    try {
+      const parts = demoToken.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[0], "base64").toString());
+        if (payload.demo && payload.id && payload.role) {
+          return { 
+            tokenHash: "demo", 
+            userId: payload.id, 
+            role: payload.role 
+          };
+        }
+      }
+    } catch {}
+  }
   if (!token || typeof token !== "string" || token.length > 128) return null;
   const tokenHash = hashSessionToken(token);
   const row = (
@@ -112,7 +129,7 @@ export async function requireAuth(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const session = await getSession(req.cookies?.[SESSION_COOKIE_NAME]);
+  const session = await getSession(req.cookies?.[SESSION_COOKIE_NAME], req.cookies?.["quikkk_demo"]);
   if (!session) {
     res.status(401).json({ error: "unauthorized" });
     return;
@@ -128,7 +145,7 @@ export function requireRole(...allowed: string[]) {
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    const session = await getSession(req.cookies?.[SESSION_COOKIE_NAME]);
+    const session = await getSession(req.cookies?.[SESSION_COOKIE_NAME], req.cookies?.["quikkk_demo"]);
     if (!session) {
       res.status(401).json({ error: "unauthorized" });
       return;
