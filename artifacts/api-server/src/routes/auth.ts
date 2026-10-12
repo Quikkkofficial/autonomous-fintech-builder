@@ -144,6 +144,39 @@ router.post("/auth/logout", async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/auth/demo-login
+ * Demo mode: login as a demo user without Firebase (for testing/preview).
+ * Only works for hardcoded demo phones: 9000000001 (admin), 9000000002 (partner), 9000000003 (collector).
+ * Body: { phone } — must be one of the demo phones.
+ */
+router.post("/auth/demo-login", async (req: Request, res: Response) => {
+  const phone = typeof req.body?.phone === "string" ? req.body.phone.trim() : "";
+  const DEMO_PHONES = ["9000000001", "9000000002", "9000000003"];
+  if (!DEMO_PHONES.includes(phone)) {
+    res.status(400).json({ error: "invalid_demo_phone" });
+    return;
+  }
+  const user = (
+    await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1)
+  )[0];
+  if (!user) {
+    res.status(404).json({ error: "demo_user_not_found" });
+    return;
+  }
+  const sessionId = await createSession(user.id);
+  setSessionCookie(res, sessionId);
+  res.json({
+    id: String(user.id),
+    phone: user.phone,
+    name: user.name ?? undefined,
+    email: user.email ?? undefined,
+    role: user.role,
+    partnerCode: user.partnerCode ?? undefined,
+    demo: true,
+  });
+});
+
+/**
  * POST /api/auth/email/request
  * Body: { email } — generates a 6-digit OTP, stores only its hash, sends via Brevo.
  */
