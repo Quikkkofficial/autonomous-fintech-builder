@@ -8,6 +8,11 @@ export async function api<T = unknown>(path: string, init?: RequestInit & { json
     headers: { ...(init?.headers ?? {}) },
     responseType: "json",
   };
+  // Forward AbortSignal so callers can time out requests (customFetch passes
+  // unknown init fields through to fetch).
+  if (init?.signal) {
+    opts.signal = init.signal;
+  }
   if (init?.json !== undefined) {
     opts.body = JSON.stringify(init.json);
     (opts.headers as Record<string, string>)["content-type"] = "application/json";
