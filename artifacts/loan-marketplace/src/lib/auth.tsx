@@ -27,6 +27,32 @@ const AuthContext = createContext<AuthContextType>({
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+// How long we wait for /me before giving up and treating the visitor as
+// signed out. Without this, a stalled request leaves isLoading true forever
+// and protected routes spin indefinitely.
+const AUTH_CHECK_TIMEOUT_MS = 5000;
+
+// Session cookies the backend sets. If none is present the visitor cannot
+// be authenticated, so we skip the /me network call entirely and redirect
+// immediately instead of waiting on it.
+const SESSION_COOKIE_NAMES = ["quikkk_session", "quikkk_demo"];
+
+function hasSessionCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  const names = document.cookie.split(";").map((c) => c.trim().split("=")[0]);
+  return SESSION_COOKIE_NAMES.some((n) => names.includes(n));
+}
+
+async function fetchMeWithTimeout(): Promise<AuthUser> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AUTH_CHECK_TIMEOUT_MS);
+  try {
+    return await api<AuthUser>("/me", { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,12 +63,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    // Fast path: no session cookie => definitely signed out. Skip the /me
+    // call so unauthenticated users redirect instantly and can never hang.
+    if (!hasSessionCookie()) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
     try {
-      const me = await api<AuthUser>("/me");
+      const me = await fetchMeWithTimeout();
       setUser(me);
     } catch (e: any) {
-      // 401 = not signed in; anything else is a real error
-      if (e?.status === 401 || /401/.test(String(e?.message))) {
+      // AbortError = /me timed out. Fail closed: treat as signed out so the
+      // guard redirects to /sign-in instead of spinning forever.
+      if (e?.name === "AbortError" || /abort/i.test(String(e?.message))) {
+        setUser(null);
+      } else if (e?.status === 401 || /401/.test(String(e?.message))) {
+        // 401 = not signed in; anything else is a real error
         setUser(null);
       } else {
         setError(e instanceof Error ? e : new Error(String(e)));
