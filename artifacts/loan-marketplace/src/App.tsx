@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,51 +8,52 @@ import { ProtectedRoute } from "@/components/protected-route";
 import { Layout } from "@/components/layout";
 import { SeoHead } from "@/components/seo";
 
-import Home from "@/pages/home";
-import Dashboard from "@/pages/dashboard";
-import Kyc from "@/pages/kyc";
-import Loans from "@/pages/loans";
-import LoanResults from "@/pages/loan-results";
-import Lenders from "@/pages/lenders";
-import Applications from "@/pages/applications";
-import ApplicationDetail from "@/pages/application-detail";
-import CreditCards from "@/pages/credit-cards";
-import EmiCalculator from "@/pages/emi-calculator";
-import Notifications from "@/pages/notifications";
-import Profile from "@/pages/profile";
-import Payments from "@/pages/payments";
-import About from "@/pages/about";
-import Terms from "@/pages/terms";
-import SignIn from "@/pages/sign-in";
-import SignUp from "@/pages/sign-up";
-import NotFound from "@/pages/not-found";
+// Code-split: load pages on-demand for fast initial load
+const Home = lazy(() => import("@/pages/home"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Kyc = lazy(() => import("@/pages/kyc"));
+const Loans = lazy(() => import("@/pages/loans"));
+const LoanResults = lazy(() => import("@/pages/loan-results"));
+const Lenders = lazy(() => import("@/pages/lenders"));
+const Applications = lazy(() => import("@/pages/applications"));
+const ApplicationDetail = lazy(() => import("@/pages/application-detail"));
+const CreditCards = lazy(() => import("@/pages/credit-cards"));
+const EmiCalculator = lazy(() => import("@/pages/emi-calculator"));
+const Notifications = lazy(() => import("@/pages/notifications"));
+const Profile = lazy(() => import("@/pages/profile"));
+const Payments = lazy(() => import("@/pages/payments"));
+const About = lazy(() => import("@/pages/about"));
+const Terms = lazy(() => import("@/pages/terms"));
+const SignIn = lazy(() => import("@/pages/sign-in"));
+const SignUp = lazy(() => import("@/pages/sign-up"));
+const NotFound = lazy(() => import("@/pages/not-found"));
 
-import AdminOverview from "@/pages/admin/overview";
-import AdminUsers from "@/pages/admin/users";
-import AdminApplications from "@/pages/admin/applications";
-import AdminLenders from "@/pages/admin/lenders";
-import AdminPayouts from "@/pages/admin/payouts";
-import AdminCollections from "@/pages/admin/collections";
-import AdminApiKeys from "@/pages/admin/api-keys";
-import AdminBankIntegrations from "@/pages/admin/bank-integrations";
-import AdminDispatchLog from "@/pages/admin/dispatch-log";
-import AdminLeadUpload from "@/pages/admin/lead-upload";
-import AdminOmniChannel from "@/pages/admin/omni-channel";
+const AdminOverview = lazy(() => import("@/pages/admin/overview"));
+const AdminUsers = lazy(() => import("@/pages/admin/users"));
+const AdminApplications = lazy(() => import("@/pages/admin/applications"));
+const AdminLenders = lazy(() => import("@/pages/admin/lenders"));
+const AdminPayouts = lazy(() => import("@/pages/admin/payouts"));
+const AdminCollections = lazy(() => import("@/pages/admin/collections"));
+const AdminApiKeys = lazy(() => import("@/pages/admin/api-keys"));
+const AdminBankIntegrations = lazy(() => import("@/pages/admin/bank-integrations"));
+const AdminDispatchLog = lazy(() => import("@/pages/admin/dispatch-log"));
+const AdminLeadUpload = lazy(() => import("@/pages/admin/lead-upload"));
+const AdminOmniChannel = lazy(() => import("@/pages/admin/omni-channel"));
 
-import PartnerOverview from "@/pages/partner/overview";
-import PartnerLeads from "@/pages/partner/leads";
-import PartnerNewLead from "@/pages/partner/new-lead";
-import PartnerPayouts from "@/pages/partner/payouts";
-import PartnerBulkUpload from "@/pages/partner/bulk-upload";
-import PartnerApiIntegration from "@/pages/partner/api-integration";
-import PartnerOmniChannel from "@/pages/partner/omni-channel";
+const PartnerOverview = lazy(() => import("@/pages/partner/overview"));
+const PartnerLeads = lazy(() => import("@/pages/partner/leads"));
+const PartnerNewLead = lazy(() => import("@/pages/partner/new-lead"));
+const PartnerPayouts = lazy(() => import("@/pages/partner/payouts"));
+const PartnerBulkUpload = lazy(() => import("@/pages/partner/bulk-upload"));
+const PartnerApiIntegration = lazy(() => import("@/pages/partner/api-integration"));
+const PartnerOmniChannel = lazy(() => import("@/pages/partner/omni-channel"));
 
-import CollectionOverview from "@/pages/collection/overview";
-import CollectionCases from "@/pages/collection/cases";
-import CollectionCaseDetail from "@/pages/collection/case-detail";
-import CollectionFollowups from "@/pages/collection/followups";
-import CollectionOmniChannel from "@/pages/collection/omni-channel";
-import CollectionApiIntegration from "@/pages/collection/api-integration";
+const CollectionOverview = lazy(() => import("@/pages/collection/overview"));
+const CollectionCases = lazy(() => import("@/pages/collection/cases"));
+const CollectionCaseDetail = lazy(() => import("@/pages/collection/case-detail"));
+const CollectionFollowups = lazy(() => import("@/pages/collection/followups"));
+const CollectionOmniChannel = lazy(() => import("@/pages/collection/omni-channel"));
+const CollectionApiIntegration = lazy(() => import("@/pages/collection/api-integration"));
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -74,6 +76,7 @@ function CP({ children }: { children: React.ReactNode }) {
 
 function Router() {
   return (
+    <Suspense fallback={<div className="min-h-dvh flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EB1414]"></div></div>}>
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
@@ -125,6 +128,7 @@ function Router() {
 
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 
