@@ -151,17 +151,32 @@ router.post("/auth/logout", async (req: Request, res: Response) => {
  */
 router.post("/auth/demo-login", async (req: Request, res: Response) => {
   const phone = typeof req.body?.phone === "string" ? req.body.phone.trim() : "";
-  const DEMO_PHONES = ["9000000001", "9000000002", "9000000003"];
-  if (!DEMO_PHONES.includes(phone)) {
+  const DEMO_CONFIG: Record<string, { name: string; role: string; partnerCode?: string }> = {
+    "9000000001": { name: "Admin Demo", role: "admin" },
+    "9000000002": { name: "Sales Partner Demo", role: "sales_partner", partnerCode: "QSP-00001" },
+    "9000000003": { name: "Collection Demo", role: "collection_partner", partnerCode: "QCP-00001" },
+  };
+  const config = DEMO_CONFIG[phone];
+  if (!config) {
     res.status(400).json({ error: "invalid_demo_phone" });
     return;
   }
-  const user = (
+  // Find or create demo user (seed may not have run on serverless)
+  let user = (
     await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1)
   )[0];
   if (!user) {
-    res.status(404).json({ error: "demo_user_not_found" });
-    return;
+    const inserted = await db
+      .insert(usersTable)
+      .values({
+        phone,
+        name: config.name,
+        role: config.role as any,
+        partnerCode: config.partnerCode ?? null,
+        phoneVerifiedAt: new Date(),
+      })
+      .returning();
+    user = inserted[0]!;
   }
   const sessionId = await createSession(user.id);
   setSessionCookie(res, sessionId);
