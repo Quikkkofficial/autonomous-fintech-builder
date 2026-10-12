@@ -1,13 +1,26 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { ensureMongo, User } from "../lib/mongo";
 import { requireAuth } from "../lib/session";
 
 const router: IRouter = Router();
 
 router.get("/me", requireAuth, async (req, res) => {
   const userId = (req as unknown as { userId: number }).userId;
-  const user = (await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1))[0];
+  // Demo mode: return mock user without DB query
+  if (userId >= 90001 && userId <= 90003) {
+    const demoUsers: Record<number, any> = {
+      90001: { id: "90001", phone: "9000000001", name: "Admin Demo", role: "admin" },
+      90002: { id: "90002", phone: "9000000002", name: "Sales Partner Demo", role: "sales_partner", partnerCode: "QSP-00001" },
+      90003: { id: "90003", phone: "9000000003", name: "Collection Demo", role: "collection_partner", partnerCode: "QCP-00001" },
+    };
+    const demo = demoUsers[userId];
+    if (demo) {
+      res.json({ ...demo, kycStatus: "verified", demo: true, createdAt: new Date().toISOString() });
+      return;
+    }
+  }
+  await ensureMongo();
+  const user = await User.findOne({ id: userId }).lean();
   if (!user) {
     res.status(404).json({ error: "not_found" });
     return;
@@ -35,15 +48,23 @@ router.post("/me/role", requireAuth, async (req, res) => {
     res.status(400).json({ error: "invalid_role" });
     return;
   }
+  await ensureMongo();
   const update: Record<string, unknown> = { role };
   if ((role === "sales_partner" || role === "collection_partner")) {
-    const existing = (await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1))[0];
+    const existing = await User.findOne({ id: userId }).select("partnerCode").lean();
     if (!existing?.partnerCode) {
       update["partnerCode"] = `${role === "sales_partner" ? "QSP" : "QCP"}-${userId.toString().padStart(5, "0")}`;
     }
   }
-  const updated = await db.update(usersTable).set(update).where(eq(usersTable.id, userId)).returning();
-  const u = updated[0]!;
+  const u = await User.findOneAndUpdate(
+    { id: userId },
+    { $set: update },
+    { new: true, lean: true },
+  );
+  if (!u) {
+    res.status(404).json({ error: "not_found" });
+    return;
+  }
   res.json({
     id: String(u.id),
     phone: u.phone,

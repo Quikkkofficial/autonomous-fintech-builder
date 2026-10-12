@@ -8,8 +8,7 @@
  *   window as a best-effort extra; the per-identifier DB limit is the
  *   authoritative one)
  */
-import { db, otpsTable } from "@workspace/db";
-import { and, eq, gte } from "drizzle-orm";
+import { ensureMongo, Otp } from "./mongo";
 
 export const OTP_SENDS_PER_IDENTIFIER_PER_HOUR = 3;
 export const OTP_SENDS_PER_IP_PER_HOUR = 10;
@@ -20,17 +19,12 @@ export async function countRecentOtpSends(
   purpose: string,
 ): Promise<number> {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  const rows = await db
-    .select({ id: otpsTable.id })
-    .from(otpsTable)
-    .where(
-      and(
-        eq(otpsTable.identifier, identifier),
-        eq(otpsTable.purpose, purpose),
-        gte(otpsTable.createdAt, oneHourAgo),
-      ),
-    );
-  return rows.length;
+  await ensureMongo();
+  return Otp.countDocuments({
+    identifier,
+    purpose,
+    createdAt: { $gte: oneHourAgo },
+  });
 }
 
 export async function isOtpSendAllowed(
