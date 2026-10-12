@@ -1,6 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { ensureMongo, User } from "../lib/mongo";
 import { requireAuth } from "../lib/session";
 
 const router: IRouter = Router();
@@ -20,7 +19,8 @@ router.get("/me", requireAuth, async (req, res) => {
       return;
     }
   }
-  const user = (await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1))[0];
+  await ensureMongo();
+  const user = await User.findOne({ id: userId }).lean();
   if (!user) {
     res.status(404).json({ error: "not_found" });
     return;
@@ -48,15 +48,23 @@ router.post("/me/role", requireAuth, async (req, res) => {
     res.status(400).json({ error: "invalid_role" });
     return;
   }
+  await ensureMongo();
   const update: Record<string, unknown> = { role };
   if ((role === "sales_partner" || role === "collection_partner")) {
-    const existing = (await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1))[0];
+    const existing = await User.findOne({ id: userId }).select("partnerCode").lean();
     if (!existing?.partnerCode) {
       update["partnerCode"] = `${role === "sales_partner" ? "QSP" : "QCP"}-${userId.toString().padStart(5, "0")}`;
     }
   }
-  const updated = await db.update(usersTable).set(update).where(eq(usersTable.id, userId)).returning();
-  const u = updated[0]!;
+  const u = await User.findOneAndUpdate(
+    { id: userId },
+    { $set: update },
+    { new: true, lean: true },
+  );
+  if (!u) {
+    res.status(404).json({ error: "not_found" });
+    return;
+  }
   res.json({
     id: String(u.id),
     phone: u.phone,

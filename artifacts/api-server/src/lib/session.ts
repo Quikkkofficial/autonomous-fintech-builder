@@ -1,16 +1,15 @@
 /**
- * Cookie-session auth (replaces Clerk).
+ * Cookie-session auth (replaces Clerk) — MongoDB edition.
  *
  * - Sessions are 256-bit opaque tokens (crypto.randomBytes); only the
- *   sha256 hash is stored in the `sessions` table.
+ *   sha256 hash is stored in the `sessions` collection.
  * - The token travels in an httpOnly, Secure, SameSite=Lax cookie
  *   named `quikkk_session`.
  * - 30-day expiry with sliding refresh on each authenticated request.
  */
 import { randomBytes, createHash } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
-import { db, usersTable, sessionsTable } from "@workspace/db";
-import { and, eq, gt } from "drizzle-orm";
+import { ensureMongo, nextId, Session, User } from "./mongo";
 
 export const SESSION_COOKIE_NAME = "quikkk_session";
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -40,9 +39,11 @@ export async function createSession(
   userId: number,
   opts: { userAgent?: string; ip?: string } = {},
 ): Promise<string> {
+  await ensureMongo();
   const token = randomBytes(32).toString("hex"); // 256-bit
   const tokenHash = hashSessionToken(token);
-  await db.insert(sessionsTable).values({
+  await Session.create({
+    id: await nextId("sessions"),
     userId,
     tokenHash,
     expiresAt: new Date(Date.now() + SESSION_TTL_MS),
@@ -64,51 +65,42 @@ export async function getSession(
       if (parts.length === 3) {
         const payload = JSON.parse(Buffer.from(parts[0], "base64").toString());
         if (payload.demo && payload.id && payload.role) {
-          return { 
-            tokenHash: "demo", 
-            userId: payload.id, 
-            role: payload.role 
+          return {
+            tokenHash: "demo",
+            userId: payload.id,
+            role: payload.role,
           };
         }
       }
     } catch {}
   }
   if (!token || typeof token !== "string" || token.length > 128) return null;
+  await ensureMongo();
   const tokenHash = hashSessionToken(token);
-  const row = (
-    await db
-      .select({
-        tokenHash: sessionsTable.tokenHash,
-        userId: sessionsTable.userId,
-        role: usersTable.role,
-        expiresAt: sessionsTable.expiresAt,
-      })
-      .from(sessionsTable)
-      .innerJoin(usersTable, eq(sessionsTable.userId, usersTable.id))
-      .where(
-        and(
-          eq(sessionsTable.tokenHash, tokenHash),
-          gt(sessionsTable.expiresAt, new Date()),
-        ),
-      )
-      .limit(1)
-  )[0];
+  const row = await Session.findOne({
+    tokenHash,
+    expiresAt: { $gt: new Date() },
+  }).lean();
   if (!row) return null;
 
+  const user = await User.findOne({ id: row.userId })
+    .select("role")
+    .lean();
+  if (!user) return null;
+
   // Sliding refresh: extend expiry on activity (best-effort, don't fail the request).
-  db.update(sessionsTable)
-    .set({ expiresAt: new Date(Date.now() + SESSION_TTL_MS) })
-    .where(eq(sessionsTable.tokenHash, tokenHash))
-    .catch(() => {});
-  return { tokenHash: row.tokenHash, userId: row.userId, role: row.role };
+  Session.updateOne(
+    { tokenHash },
+    { $set: { expiresAt: new Date(Date.now() + SESSION_TTL_MS) } },
+  ).catch(() => {});
+  return { tokenHash: row.tokenHash, userId: row.userId, role: user.role };
 }
 
 /** Delete a session by raw token. */
 export async function destroySession(token: string | undefined): Promise<void> {
   if (!token || typeof token !== "string") return;
-  await db
-    .delete(sessionsTable)
-    .where(eq(sessionsTable.tokenHash, hashSessionToken(token)));
+  await ensureMongo();
+  await Session.deleteOne({ tokenHash: hashSessionToken(token) });
 }
 
 export function setSessionCookie(res: Response, token: string): void {

@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { ensureMongo } from "./lib/mongo";
 
 const app: Express = express();
 
@@ -39,6 +40,20 @@ app.use(
   }),
 );
 app.use(express.urlencoded({ extended: true }));
+
+// Ensure the MongoDB connection is up before any route handler runs.
+// Failures are logged here; individual handlers will surface a clear error.
+app.use(async (_req, _res, next) => {
+  try {
+    await ensureMongo();
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : err },
+      "MongoDB connection not ready",
+    );
+  }
+  next();
+});
 
 app.use("/api", router);
 

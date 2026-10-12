@@ -1,5 +1,5 @@
 /**
- * Free OTP + email auth routes (replaces Clerk).
+ * Free OTP + email auth routes (replaces Clerk) — MongoDB edition.
  *
  *   POST /api/auth/session       — verify Firebase ID token → mint cookie session
  *   POST /api/auth/logout        — destroy session, clear cookie
@@ -9,8 +9,7 @@
  * All responses use the same user JSON shape as GET /api/me.
  */
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, usersTable, otpsTable } from "@workspace/db";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { ensureMongo, nextId, User, Otp } from "../lib/mongo";
 import {
   generateOtp,
   hashOtp,
@@ -32,9 +31,19 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-type UserRow = typeof usersTable.$inferSelect;
-
-function publicUser(u: UserRow) {
+function publicUser(u: {
+  id: number;
+  phone?: string | null;
+  name?: string | null;
+  email?: string | null;
+  kycStatus: string;
+  panMasked?: string | null;
+  role: string;
+  partnerCode?: string | null;
+  emailVerifiedAt?: Date | null;
+  phoneVerifiedAt?: Date | null;
+  createdAt: Date;
+}) {
   return {
     id: String(u.id),
     phone: u.phone,
@@ -95,34 +104,36 @@ router.post("/auth/session", async (req: Request, res: Response) => {
     return;
   }
   const now = new Date();
+  await ensureMongo();
 
   // Find-or-create user by phone.
-  let user = (
-    await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1)
-  )[0];
+  let user = await User.findOne({ phone }).lean();
 
   if (!user) {
     const name =
       typeof req.body?.name === "string" && req.body.name.trim()
         ? req.body.name.trim().slice(0, 200)
         : null;
-    const inserted = await db
-      .insert(usersTable)
-      .values({
-        phone,
-        name,
-        firebaseUid: verified.uid,
-        phoneVerifiedAt: now,
-      })
-      .returning();
-    user = inserted[0]!;
+    const created = await User.create({
+      id: await nextId("users"),
+      phone,
+      name,
+      firebaseUid: verified.uid,
+      phoneVerifiedAt: now,
+    });
+    user = created.toObject();
   } else if (!user.firebaseUid || !user.phoneVerifiedAt) {
-    const updated = await db
-      .update(usersTable)
-      .set({ firebaseUid: user.firebaseUid ?? verified.uid, phoneVerifiedAt: user.phoneVerifiedAt ?? now })
-      .where(eq(usersTable.id, user.id))
-      .returning();
-    user = updated[0]!;
+    const updated = await User.findOneAndUpdate(
+      { id: user.id },
+      {
+        $set: {
+          firebaseUid: user.firebaseUid ?? verified.uid,
+          phoneVerifiedAt: user.phoneVerifiedAt ?? now,
+        },
+      },
+      { new: true, lean: true },
+    );
+    user = updated!;
   }
 
   const token = await createSession(user.id, {
@@ -168,7 +179,7 @@ router.post("/auth/demo-login", async (req: Request, res: Response) => {
   const payload = JSON.stringify({ id: config.id, phone, role: config.role, demo: true, t: Date.now() });
   const signature = createHash("sha256").update(payload + token).digest("hex").slice(0, 16);
   const demoToken = Buffer.from(payload).toString("base64") + "." + token + "." + signature;
-  
+
   res.cookie("quikkk_demo", demoToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -176,7 +187,7 @@ router.post("/auth/demo-login", async (req: Request, res: Response) => {
     path: "/",
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   });
-  
+
   res.json({
     id: String(config.id),
     phone,
@@ -207,8 +218,10 @@ router.post("/auth/email/request", async (req: Request, res: Response) => {
     return;
   }
 
+  await ensureMongo();
   const code = generateOtp();
-  await db.insert(otpsTable).values({
+  await Otp.create({
+    id: await nextId("otps"),
     identifier: email,
     channel: "email",
     purpose: "email_verify",
@@ -241,21 +254,15 @@ router.post("/auth/email/verify", async (req: Request, res: Response) => {
     return;
   }
 
+  await ensureMongo();
   // Latest unused, unexpired OTP for this identifier+purpose.
-  const otp = (
-    await db
-      .select()
-      .from(otpsTable)
-      .where(
-        and(
-          eq(otpsTable.identifier, email),
-          eq(otpsTable.purpose, "email_verify"),
-          isNull(otpsTable.usedAt),
-        ),
-      )
-      .orderBy(desc(otpsTable.createdAt))
-      .limit(1)
-  )[0];
+  const otp = await Otp.findOne({
+    identifier: email,
+    purpose: "email_verify",
+    usedAt: null,
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
   if (!otp || otp.expiresAt.getTime() < Date.now()) {
     res.status(400).json({ error: "code_expired" });
@@ -266,18 +273,18 @@ router.post("/auth/email/verify", async (req: Request, res: Response) => {
     return;
   }
   if (!verifyOtpHash(code, otp.codeHash)) {
-    await db
-      .update(otpsTable)
-      .set({ attempts: otp.attempts + 1 })
-      .where(eq(otpsTable.id, otp.id));
+    await Otp.updateOne(
+      { id: otp.id },
+      { $set: { attempts: otp.attempts + 1 } },
+    );
     res.status(400).json({ error: "invalid_code" });
     return;
   }
 
-  await db
-    .update(otpsTable)
-    .set({ usedAt: new Date(), attempts: otp.attempts + 1 })
-    .where(eq(otpsTable.id, otp.id));
+  await Otp.updateOne(
+    { id: otp.id },
+    { $set: { usedAt: new Date(), attempts: otp.attempts + 1 } },
+  );
 
   // Link the verified email to the logged-in user if there is one.
   const sessionToken: string | undefined = req.cookies?.[SESSION_COOKIE_NAME];
@@ -285,10 +292,10 @@ router.post("/auth/email/verify", async (req: Request, res: Response) => {
     const { getSession } = await import("../lib/session");
     const session = await getSession(sessionToken);
     if (session) {
-      await db
-        .update(usersTable)
-        .set({ email, emailVerifiedAt: new Date() })
-        .where(eq(usersTable.id, session.userId));
+      await User.updateOne(
+        { id: session.userId },
+        { $set: { email, emailVerifiedAt: new Date() } },
+      );
     }
   }
   res.json({ ok: true, email });
