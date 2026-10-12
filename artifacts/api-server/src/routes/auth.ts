@@ -161,34 +161,44 @@ router.post("/auth/demo-login", async (req: Request, res: Response) => {
     res.status(400).json({ error: "invalid_demo_phone" });
     return;
   }
-  // Find or create demo user (seed may not have run on serverless)
-  let user = (
-    await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1)
-  )[0];
-  if (!user) {
-    const inserted = await db
-      .insert(usersTable)
-      .values({
-        phone,
-        name: config.name,
-        role: config.role as any,
-        partnerCode: config.partnerCode ?? null,
-        phoneVerifiedAt: new Date(),
-      })
-      .returning();
-    user = inserted[0]!;
+  try {
+    // Find or create demo user (seed may not have run on serverless)
+    let user = (
+      await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1)
+    )[0];
+    if (!user) {
+      const inserted = await db
+        .insert(usersTable)
+        .values({
+          phone,
+          name: config.name,
+          role: config.role as any,
+          partnerCode: config.partnerCode ?? null,
+          phoneVerifiedAt: new Date(),
+        })
+        .returning();
+      user = inserted[0]!;
+    }
+    const sessionId = await createSession(user.id);
+    setSessionCookie(res, sessionId);
+    res.json({
+      id: String(user.id),
+      phone: user.phone,
+      name: user.name ?? undefined,
+      email: user.email ?? undefined,
+      role: user.role,
+      partnerCode: user.partnerCode ?? undefined,
+      demo: true,
+    });
+  } catch (err: any) {
+    console.error("Demo login DB error:", err?.message, err?.code, err?.detail);
+    res.status(500).json({ 
+      error: "db_error", 
+      message: err?.message,
+      code: err?.code,
+      detail: err?.detail 
+    });
   }
-  const sessionId = await createSession(user.id);
-  setSessionCookie(res, sessionId);
-  res.json({
-    id: String(user.id),
-    phone: user.phone,
-    name: user.name ?? undefined,
-    email: user.email ?? undefined,
-    role: user.role,
-    partnerCode: user.partnerCode ?? undefined,
-    demo: true,
-  });
 });
 
 /**
