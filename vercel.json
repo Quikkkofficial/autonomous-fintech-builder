@@ -5,12 +5,12 @@
   "outputDirectory": "artifacts/loan-marketplace/dist/public",
   "rewrites": [
     {
-      "destination": "/api/:path*",
-      "source": "/api/:path*"
+      "source": "/api/:path*",
+      "destination": "/api/index.mjs"
     },
     {
-      "destination": "/index.html",
-      "source": "/(.*)"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
