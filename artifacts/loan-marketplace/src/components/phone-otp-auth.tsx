@@ -183,11 +183,60 @@ export function PhoneOtpAuth({
           </div>
 
           {!configured ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex gap-3 text-sm text-amber-900">
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-              <div>
-                Phone sign-in is not configured yet. The site owner needs to add the
-                Firebase credentials to finish setup.
+            <div className="space-y-4">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex gap-3 text-sm text-amber-900">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <div>
+                  Phone sign-in is not configured yet. The site owner needs to add the
+                  Firebase credentials to finish setup.
+                </div>
+              </div>
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <p className="text-sm font-medium text-blue-900 mb-3">Try Demo Mode</p>
+                <div className="space-y-2">
+                  <Button
+                    onClick={async () => {
+                      setError(null);
+                      try {
+                        const me = await api<{ role?: string }>("/auth/demo-login", {
+                          method: "POST",
+                          json: { phone: "9000000001" },
+                        });
+                        await refresh();
+                        setLocation(roleHomePath((me as any)?.role));
+                      } catch (e: any) {
+                        setError("Demo login failed. Please try again.");
+                      }
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium h-10"
+                  >
+                    Login as Admin Demo
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      setError(null);
+                      try {
+                        const me = await api<{ role?: string }>("/auth/demo-login", {
+                          method: "POST",
+                          json: { phone: "9000000002" },
+                        });
+                        await refresh();
+                        setLocation(roleHomePath((me as any)?.role));
+                      } catch (e: any) {
+                        setError("Demo login failed. Please try again.");
+                      }
+                    }}
+                    variant="outline"
+                    className="w-full h-10"
+                  >
+                    Login as Partner Demo
+                  </Button>
+                </div>
+                {error && (
+                  <p className="text-sm text-red-600 bg-red-50/50 border border-red-100 rounded-md px-3 py-2 mt-2">
+                    {error}
+                  </p>
+                )}
               </div>
             </div>
           ) : step === "phone" ? (
